@@ -1,4 +1,7 @@
-class Subscriber {
+import { Queue } from "queue/queue";
+
+ 
+ export class Subscriber {
     constructor(public name: string) { }
 
     async pull(queue: Queue): Promise<void> {

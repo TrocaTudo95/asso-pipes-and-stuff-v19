@@ -1,9 +1,9 @@
-abstract class Queue{
+export abstract class Queue{
     abstract push(arg: string): void
     abstract pop(): Promise<string>
 }
 
-class AsyncQueue extends Queue {
+export class AsyncQueue extends Queue {
     public queue: Array<string> = new Array()
     protected promises: Array<any> = new Array()
 
