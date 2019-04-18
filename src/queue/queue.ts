@@ -1,4 +1,4 @@
-import { AsyncSemaphore } from "semaphore/semaphore";
+import { AsyncSemaphore } from "../semaphore/semaphore";
 
 export abstract class Queue{
     abstract push(arg: string): void
@@ -17,8 +17,9 @@ export class AsyncQueue extends Queue {
     }
 
     async pop(): Promise<string> {
-        if (this.queue.length > 0)
+        if (this.queue.length > 0) {
             return Promise.resolve(this.queue.shift())
+        }
         else
             return new Promise(res => this.promises.push(res))
     }
