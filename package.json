@@ -20,7 +20,8 @@
     },
     "scripts": {
         "build": "tsc",
-        "start": "tsc; node build/main.js",
+        "scenario1": "tsc; node build/scenario1.js",
+        "scenario2": "tsc; node build/scenario2.js",
         "asyncqueue": "tsc; node build/asyncqueue.js"
     }
 }
