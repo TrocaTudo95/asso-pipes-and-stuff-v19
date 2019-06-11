@@ -8,6 +8,11 @@ export interface Service {
     service: Function
 }
 
+export interface ServiceRequest {
+    service: Service,
+    params: any[]
+}
+
 export class ServiceIndex {
 
     constructor(private services:Service[]) {}
@@ -23,7 +28,8 @@ export class ServiceIndex {
                 serviceDescription: service.serviceDescription,
                 params: service.params,
                 paramsType: service.paramsType,
-                returnType: service.returnType
+                returnType: service.returnType,
+                numberOfParams: service.numberOfParams
             }
         })
     }

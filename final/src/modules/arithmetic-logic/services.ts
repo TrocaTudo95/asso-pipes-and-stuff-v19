@@ -3,8 +3,6 @@ import { InfoSecModule } from "../../common/Module";
 
 export class ArithmeticLogicModule extends InfoSecModule {
 
-    serviceIndex:ServiceIndex
-
     constructor() {
 
         super('ArithmeticLogicModule')
@@ -13,7 +11,7 @@ export class ArithmeticLogicModule extends InfoSecModule {
             {
                 serviceName: 'sum',
                 serviceDescription: 'Sum list of numbers',
-                params: ['Array'],
+                params: ['Array of Numbers to be summed up'],
                 paramsType: ['Array of Numbers'],
                 numberOfParams: 1,
                 returnType: 'number',

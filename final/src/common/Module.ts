@@ -1,4 +1,4 @@
-import { ServiceIndex, Service } from "./service-index";
+import { ServiceIndex, ServiceRequest } from "./service-index";
 
 export abstract class InfoSecModule {
 
@@ -9,7 +9,7 @@ export abstract class InfoSecModule {
         this.name = name
     }
 
-    executeService(service: Service) {
+    executeService(service: ServiceRequest) {
 
     }
 
