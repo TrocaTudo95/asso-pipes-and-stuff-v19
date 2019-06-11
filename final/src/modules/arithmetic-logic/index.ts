@@ -10,4 +10,3 @@ class ArithmeticLogicNode extends InfoSecNode {
 }
 
 let node = new ArithmeticLogicNode()
-

@@ -1,6 +1,6 @@
 import { InfoSecModule } from "./Module";
 import { BrokerInterface, Observer } from "../broker-interface/broker-interface";
-import { ServiceIndex } from "./service-index";
+import { ServiceIndex, ServiceRequest } from "./service-index";
 
 export class InfoSecNode implements Observer {
 
@@ -9,8 +9,11 @@ export class InfoSecNode implements Observer {
     serviceLocator: ServiceIndex
     nodeId : string = Math.floor(Math.random() * 16777216).toString(16)
 
+    requestQueue : ServiceRequest[] = []
+
     static host : string = 'localhost'
     static port : number = 9001
+    static requestNumber = 0
 
     constructor(module: InfoSecModule) {
 
@@ -48,16 +51,14 @@ export class InfoSecNode implements Observer {
 
     }
 
-    receiveMessage = (topic:string, message : Object) : void => {
+    receiveMessage = (topic:string, message : any) : void => {
 
         const topicLevels : string[] = topic.split('/')
-        if(topicLevels[1] == this.nodeId)
+        
+        if(topicLevels[1] == this.nodeId && topicLevels[0] != 'service')
             return
-
+        
         console.log(`msg received on topic ${topic}`)
-        console.log(message)
-
-        console.log(topicLevels)
         
         if(topicLevels[0] == 'new') {
             this.onNewNode(message, topicLevels[1])
@@ -65,12 +66,28 @@ export class InfoSecNode implements Observer {
         else if(topicLevels[0] == 'services') {
             this.addServicesOfNode(message, topicLevels[1])
         }
+
+        else if(topicLevels[0] == 'service') {
+
+            this.module.executeService(message.serviceRequest)
+
+        }
+
     }
 
     onNewNode = (message : Object, nodeId: string) => {
 
         this.brokerInterface.publishMessage(`services/${this.nodeId}`,JSON.stringify(this.module.serviceIndex.getServicesForBroker()))
         this.addServicesOfNode(message,nodeId)
+
+        /**
+         * testing only
+         */
+
+         
+
+         if(this.module.name == 'ArithmeticLogicModule')
+            this.requestService(this.serviceLocator.getServicesForBroker()[0].serviceName, ['lower'] )
 
     }
 
@@ -87,6 +104,37 @@ export class InfoSecNode implements Observer {
         console.log('Other Services')
         console.log(this.serviceLocator.getServices())
 
+
+    }
+
+    requestService = async (serviceName: string, params: any[]) => {
+
+        let remoteService = this.serviceLocator.findService(serviceName)
+
+        if(remoteService != undefined) {
+
+            let serviceRequest : ServiceRequest = {
+                serviceName: remoteService.serviceName,
+                params: params,
+                requestId: `${this.nodeId}#${InfoSecNode.requestNumber++}`
+
+            }
+
+            try {
+
+                await this.brokerInterface.publishMessage(`service/${remoteService.provider}/${remoteService.serviceName}`, JSON.stringify({serviceRequest: serviceRequest}))
+            }
+
+            catch(e) {
+                console.log(e)
+            }
+
+
+        }
+
+        else {
+
+        }
 
     }
 

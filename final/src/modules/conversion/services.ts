@@ -16,6 +16,7 @@ export class ConversionModule extends InfoSecModule {
                 numberOfParams: 1,
                 returnType: 'string',
                 service: this.toUpperCase,
+                provider: -1
             }
         ]
 
@@ -23,10 +24,19 @@ export class ConversionModule extends InfoSecModule {
 
     }
 
-    toUpperCase = (input: string) : string => {
+    toUpperCase = (input: any[]) : string => {
 
-        return input.toUpperCase()
-    
+        try {
+            
+            let inputString : string = input[0] as string
+            return input[0].toUpperCase()
+
+        }
+
+        catch(error) {
+            return error
+        }
+
     }
 
 }

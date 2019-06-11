@@ -61,6 +61,9 @@ export class BrokerInterface implements Subject {
 
     publishMessage = (topic:string, message:string, qos:number = 0, retain: boolean = false) : Promise<string> => {
 
+        console.log('publishing message')
+        console.log(topic)
+
         return new Promise((res,rej) => {
 
             this.mqttClient.publish(topic,message,{qos:qos, retain: retain}, (err:any) => {

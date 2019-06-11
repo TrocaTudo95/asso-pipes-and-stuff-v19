@@ -6,11 +6,13 @@ export interface Service {
     numberOfParams: number
     returnType: string
     service: Function
+    provider: number
 }
 
 export interface ServiceRequest {
-    service: Service,
-    params: any[]
+    serviceName: string,
+    params: any[],
+    requestId: string
 }
 
 export class ServiceIndex {
@@ -21,7 +23,8 @@ export class ServiceIndex {
         return this.services
     }
 
-    getServicesForBroker = () : Object => {
+    getServicesForBroker = () : Service[] => {
+        
         return this.services.map(service => {
             return {
                 serviceName: service.serviceName, 
@@ -29,7 +32,9 @@ export class ServiceIndex {
                 params: service.params,
                 paramsType: service.paramsType,
                 returnType: service.returnType,
-                numberOfParams: service.numberOfParams
+                numberOfParams: service.numberOfParams,
+                provider: service.provider,
+                service: undefined
             }
         })
     }
@@ -37,5 +42,12 @@ export class ServiceIndex {
     addService = (service: Service) : void => {
         this.services.push(service)
     }
+
+    findService = (serviceName: string) : Service => {
+
+        return this.services.filter(service => service.serviceName == serviceName)[0]
+
+    }
+
 
 }

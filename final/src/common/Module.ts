@@ -9,7 +9,23 @@ export abstract class InfoSecModule {
         this.name = name
     }
 
-    executeService(service: ServiceRequest) {
+    executeService(serviceRequest: ServiceRequest) : any {
+
+        const service = this.serviceIndex.findService(serviceRequest.serviceName)
+
+        //make some validations (number of arguments and type)
+
+        let result = service.service(serviceRequest.params)
+
+        console.log('service request')
+        console.log(serviceRequest)
+
+        console.log('executing service')
+        console.log(service)
+
+        console.log(result)
+
+        return result
 
     }
 

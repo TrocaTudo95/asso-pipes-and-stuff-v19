@@ -16,6 +16,7 @@ export class ArithmeticLogicModule extends InfoSecModule {
                 numberOfParams: 1,
                 returnType: 'number',
                 service: this.sum,
+                provider: -1
             }
         ]
 
@@ -23,7 +24,7 @@ export class ArithmeticLogicModule extends InfoSecModule {
 
     }
 
-    sum = (params: number[]) : number => {
+    sum = (params: any[]) : number => {
 
         return params.reduce((acc,curr) => acc + curr)
     
