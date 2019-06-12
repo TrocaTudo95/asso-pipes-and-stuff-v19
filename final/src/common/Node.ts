@@ -95,11 +95,17 @@ export class InfoSecNode implements Observer {
             Promise.all([this.requestService(this.serviceLocator.getServicesForBroker()[0].serviceName, ['lower']), this.requestService(this.serviceLocator.getServicesForBroker()[0].serviceName, ['João Pedro'])])
     
                .then(result => {
-    
-                   console.log(result)
+                    console.log('Remote Service')
+                    console.log(result)
     
                })
                .catch(e => console.log(e))
+
+            this.requestService(this.module.serviceIndex.getServices()[0].serviceName,[1,2,3,4])
+               .then(result => {
+                    console.log('Local Service')
+                    console.log(result)
+               })
         
         }
 
@@ -130,17 +136,16 @@ export class InfoSecNode implements Observer {
 
     requestService = async (serviceName: string, params: any[]) : Promise<ServiceReply> => {
 
-        let remoteService = this.serviceLocator.findService(serviceName)
-
         return new Promise((res,rej) => {
+
+            let remoteService = this.serviceLocator.findService(serviceName)
+            let localService = this.module.serviceIndex.findService(serviceName)
 
             if(remoteService != undefined) {
 
                 let serviceRequest : ServiceRequest = {
                     serviceName: remoteService.serviceName,
                     params: params,
-                    
-    
                 }
     
                 try {
@@ -169,7 +174,9 @@ export class InfoSecNode implements Observer {
             }
     
             else {
-                res({serviceName:'',result:''})
+
+                const result = this.module.executeService({serviceName: serviceName, params: params})
+                res({serviceName:serviceName,result:result})
             }
 
         })
