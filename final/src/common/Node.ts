@@ -1,6 +1,6 @@
 import { InfoSecModule } from "./Module";
-import { BrokerInterface, Observer } from "../broker-interface/broker-interface";
-import { ServiceIndex, ServiceRequest } from "./service-index";
+import { BrokerInterface, Observer, fetchMQTT } from "../broker-interface/broker-interface";
+import { ServiceIndex, ServiceRequest, ServiceReply } from "./service-index";
 
 export class InfoSecNode implements Observer {
 
@@ -39,7 +39,7 @@ export class InfoSecNode implements Observer {
             await this.brokerInterface.subscribeToTopics(['services/+','new/+'])
             
             let promises : Promise<string>[] = []
-            this.module.serviceIndex.getServices().forEach(service => promises.push(this.brokerInterface.subscribeToTopic(`service/${this.nodeId}/${service.serviceName}`)))
+                this.module.serviceIndex.getServices().forEach(service => promises.push(this.brokerInterface.subscribeToTopic(`service/${this.nodeId}/${service.serviceName}/+`)))
             
             await Promise.all(promises)
 
@@ -69,7 +69,13 @@ export class InfoSecNode implements Observer {
 
         else if(topicLevels[0] == 'service') {
 
-            this.module.executeService(message.serviceRequest)
+            const result = this.module.executeService(message.serviceRequest)
+            const serviceReply = {
+                serviceName: message.serviceRequest.serviceName,
+                result: result
+            }
+
+            this.brokerInterface.publishMessage(`serviceReply/${topicLevels[1]}/${message.serviceRequest.serviceName}/${topicLevels[3]}`,JSON.stringify({serviceReply: serviceReply}))
 
         }
 
@@ -84,11 +90,32 @@ export class InfoSecNode implements Observer {
          * testing only
          */
 
+        if(this.module.name == 'ArithmeticLogicModule') {
          
+            Promise.all([this.requestService(this.serviceLocator.getServicesForBroker()[0].serviceName, ['lower']), this.requestService(this.serviceLocator.getServicesForBroker()[0].serviceName, ['João Pedro'])])
+    
+               .then(result => {
+    
+                   console.log(result)
+    
+               })
+               .catch(e => console.log(e))
+        
+        }
 
-         if(this.module.name == 'ArithmeticLogicModule')
-            this.requestService(this.serviceLocator.getServicesForBroker()[0].serviceName, ['lower'] )
+        else if (this.module.name == 'ConversionModule') {
 
+            Promise.all([this.requestService(this.serviceLocator.getServicesForBroker()[0].serviceName, [1,2,3]), this.requestService(this.serviceLocator.getServicesForBroker()[0].serviceName, [5])])
+    
+               .then(result => {
+    
+                   console.log(result)
+    
+               })
+               .catch(e => console.log(e))
+
+        }
+         
     }
 
     addServicesOfNode = (message: any, nodeId: string) => {
@@ -99,42 +126,55 @@ export class InfoSecNode implements Observer {
 
         }
 
-        console.log('My Services')
-        console.log(this.module.serviceIndex.getServices())
-        console.log('Other Services')
-        console.log(this.serviceLocator.getServices())
-
-
     }
 
-    requestService = async (serviceName: string, params: any[]) => {
+    requestService = async (serviceName: string, params: any[]) : Promise<ServiceReply> => {
 
         let remoteService = this.serviceLocator.findService(serviceName)
 
-        if(remoteService != undefined) {
+        return new Promise((res,rej) => {
 
-            let serviceRequest : ServiceRequest = {
-                serviceName: remoteService.serviceName,
-                params: params,
-                requestId: `${this.nodeId}#${InfoSecNode.requestNumber++}`
+            if(remoteService != undefined) {
 
+                let serviceRequest : ServiceRequest = {
+                    serviceName: remoteService.serviceName,
+                    params: params,
+                    
+    
+                }
+    
+                try {
+    
+                    const requestId = `${this.nodeId}REQ${InfoSecNode.requestNumber++}`
+                    const requestTopic = `service/${remoteService.provider}/${remoteService.serviceName}/${requestId}`
+                    const message = JSON.stringify({serviceRequest: serviceRequest})
+                    const replyTopic = `serviceReply/${remoteService.provider}/${remoteService.serviceName}/${requestId}`
+    
+                    fetchMQTT(this.brokerInterface,requestTopic,replyTopic,message).then(reply => {
+
+                        let replyObject : any = reply as any
+
+                        res(replyObject.serviceReply)
+
+                    })
+                    .catch((error) => rej(error))
+    
+                }
+    
+                catch(e) {
+                    console.log(e)
+                }
+    
+    
+            }
+    
+            else {
+                res({serviceName:'',result:''})
             }
 
-            try {
+        })
 
-                await this.brokerInterface.publishMessage(`service/${remoteService.provider}/${remoteService.serviceName}`, JSON.stringify({serviceRequest: serviceRequest}))
-            }
-
-            catch(e) {
-                console.log(e)
-            }
-
-
-        }
-
-        else {
-
-        }
+        
 
     }
 

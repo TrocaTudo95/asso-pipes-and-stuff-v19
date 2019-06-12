@@ -11,8 +11,12 @@ export interface Service {
 
 export interface ServiceRequest {
     serviceName: string,
-    params: any[],
-    requestId: string
+    params: any[]
+}
+
+export interface ServiceReply {
+    serviceName: string,
+    result: any
 }
 
 export class ServiceIndex {

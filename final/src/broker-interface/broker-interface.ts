@@ -78,7 +78,6 @@ export class BrokerInterface implements Subject {
 
         })
 
-
     }
 
     subscribeToTopic = (topic:string) : Promise<string> => {
@@ -90,7 +89,7 @@ export class BrokerInterface implements Subject {
                 if(granted)
                     res(`Subscribed to Topic ${topic}, with granted ${granted}`)
                 else 
-                    rej(`Failed subscribed to Topic ${topic} with error: ${err}`)
+                    rej(`Failed subscribing to Topic ${topic} with error: ${err}`)
             }) 
 
         })
@@ -105,7 +104,39 @@ export class BrokerInterface implements Subject {
                 if(granted)
                     res(`Subscribed to Topics ${topics}, with granted ${granted}`)
                 else
-                    rej(`Failed subscribed to Topic ${topics} with error: ${err}`)
+                    rej(`Failed subscribing to Topics ${topics} with error: ${err}`)
+            }) 
+
+        })
+
+    }
+
+    unSubscribeToTopic = (topic:string) : Promise<string> => {
+
+        return new Promise((res,rej) => {
+
+            this.mqttClient.unsubscribe(topic, {}, (err:any) => {
+                
+                if(err)
+                    rej(`Failed unsubscribing to Topic ${topic} with error: ${err}`)
+                    
+                else 
+                    res(`Unsubscribed to Topic ${topic}`)
+            }) 
+
+        })
+
+    }
+
+    unSubscribeToTopics = (topics:string[]) : Promise<string> => {
+
+        return new Promise((res,rej) => {
+
+            this.mqttClient.unsubscribe(topics,{}, (err:any) => {
+                if(err)
+                    rej(`Failed unsubscribing to Topics ${topics} with error: ${err}`)
+                else
+                    res(`Unsubscribed to Topics ${topics}`)
             }) 
 
         })
@@ -128,5 +159,84 @@ export class BrokerInterface implements Subject {
     notifyObservers = (topic:string,msg:Object) => this.observers.forEach(observer => observer.receiveMessage(topic,msg))
 
     
+}
+
+/**
+ * Class to be used to send a request, attaching a handler to call when receive a message to the reply topic (looks like XMLHTTPRequest)
+ * This way we adapt a publish/subscribe pattern to a request/reply pattern for the cases a response tracking is needed
+ */
+
+class MQTTRequestService implements Observer {
+
+    brokerInterface : BrokerInterface
+    requestTopic: string
+    replyTopic: string
+    reply: Object
+    onReceiveMessage : Function
+
+    constructor(brokerInterface:BrokerInterface, requestTopic : string, replyTopic: string) {
+
+        this.brokerInterface = brokerInterface
+        this.requestTopic = requestTopic
+        this.replyTopic = replyTopic
+        this.brokerInterface.addObserver(this)
+
+    }
+
+    request = (message: string) : Promise<[string,string]>  => {
+
+        return Promise.all([this.brokerInterface.publishMessage(this.requestTopic, message),  this.brokerInterface.subscribeToTopic(this.replyTopic)])
+
+    }
+
+
+    receiveMessage = (topic:string, message : Object) : void => {
+
+        if(topic != this.replyTopic)
+            return
+        
+        this.reply = message
+        this.brokerInterface.unSubscribeToTopic(this.replyTopic)
+        this.brokerInterface.removeObserver(this)
+        this.onReceiveMessage(this.reply)
+
+    }
+
+    setOnReceiveMessageHandler = (handler : Function) : void => {
+
+        this.onReceiveMessage = handler
+
+    }
+
+}
+
+/**
+ * Wrapper function that retrieves a promise of service reply (looks like http fetch)
+ * 
+ * 
+ * @param brokerInterface broker interface 
+ * @param requestTopic topic to publish request (/service and  takes node id, service name and request number)
+ * @param replyTopic topic to receive the request (/serviceReply and takes the node id, service name and request number)
+ * @param message message to send
+ */
+
+export const fetchMQTT = (brokerInterface : BrokerInterface, requestTopic: string, replyTopic: string, message: string) => {
+
+    return new Promise((resolve,reject) => {
+        
+        const mqttRequest = new MQTTRequestService(brokerInterface,requestTopic,replyTopic)
+        mqttRequest.request(message).then(_ => {
+
+            mqttRequest.setOnReceiveMessageHandler((message:Object) => {
+
+                resolve(message)
+    
+            })
+
+        })
+        
+        .catch(error => reject(error))
+        
+    })
 
 }
