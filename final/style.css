@@ -1,0 +1,50 @@
+body {
+    padding: 0;
+    margin: 0;
+}
+
+body h3 {
+    padding-left: 1em;
+}
+
+body div#content {
+    display: flex;
+    flex-direction: column;
+}
+
+body div#pallete {
+    background-color: #f0f0f0;
+}
+
+body div#pallete ul {
+    list-style: none;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 0;
+}
+
+body div#pallete ul li {
+    padding: 10px;
+    margin: 0.5em 1em;
+    border: 1.5px solid black;
+    width: 120px;
+    height: 40px;
+    text-align: center;
+    cursor:grab;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+body div#pallete ul li#inputidffffff {
+
+    border-radius: 50%
+
+}
+
+body div#pallete ul li#outputidd1d1d1 {
+
+    border-radius: 50%
+
+}

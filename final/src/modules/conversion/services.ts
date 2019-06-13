@@ -16,7 +16,7 @@ export class ConversionModule extends InfoSecModule {
                 numberOfParams: 1,
                 returnType: 'string',
                 service: this.toUpperCase,
-                provider: -1
+                provider: "-1"
             }
         ]
 

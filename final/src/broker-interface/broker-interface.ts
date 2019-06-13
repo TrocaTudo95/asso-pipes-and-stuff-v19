@@ -2,6 +2,8 @@ import * as MQTT from './mqtt'
 
 export interface Observer {
     receiveMessage(topic:string, message : Object) : void
+    setObserverId(observerId : number) : void
+    observerId : number
 }
 
 interface Subject {
@@ -12,6 +14,8 @@ interface Subject {
 }
 
 export class BrokerInterface implements Subject {
+
+    static observerId = 0
 
     public mqttClient : any
     public observers : Observer [] = []
@@ -150,10 +154,16 @@ export class BrokerInterface implements Subject {
 
     }
 
-    addObserver = (newObserver : Observer) : number => this.observers.push(newObserver)
+    addObserver = (newObserver : Observer) : number => {
+        
+        newObserver.setObserverId(BrokerInterface.observerId++)
 
-    removeObserver = (observer : Observer) : void => {
-        this.observers = this.observers.splice(this.observers.indexOf(observer))
+        return this.observers.push(newObserver)
+
+    }
+
+    removeObserver = (observerToRemove : Observer) : void => {
+        this.observers = this.observers.filter(observer => observer.observerId != observerToRemove.observerId)
     }
     
     notifyObservers = (topic:string,msg:Object) => this.observers.forEach(observer => observer.receiveMessage(topic,msg))
@@ -173,6 +183,7 @@ class MQTTRequestService implements Observer {
     replyTopic: string
     reply: Object
     onReceiveMessage : Function
+    observerId : number
 
     constructor(brokerInterface:BrokerInterface, requestTopic : string, replyTopic: string) {
 
@@ -196,7 +207,7 @@ class MQTTRequestService implements Observer {
             return
         
         this.reply = message
-        this.brokerInterface.unSubscribeToTopic(this.replyTopic)
+        // this.brokerInterface.unSubscribeToTopic(this.replyTopic)
         this.brokerInterface.removeObserver(this)
         this.onReceiveMessage(this.reply)
 
@@ -206,6 +217,10 @@ class MQTTRequestService implements Observer {
 
         this.onReceiveMessage = handler
 
+    }
+
+    setObserverId(observerId:number) {
+        this.observerId = observerId
     }
 
 }

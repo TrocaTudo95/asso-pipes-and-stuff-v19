@@ -16,8 +16,20 @@ export class ArithmeticLogicModule extends InfoSecModule {
                 numberOfParams: 1,
                 returnType: 'number',
                 service: this.sum,
-                provider: -1
+                provider: "-1"
+            },
+            {
+                serviceName: 'sub',
+                serviceDescription: 'Sub list of numbers',
+                params: ['Array of Numbers to be sub down'],
+                paramsType: ['Array of Numbers'],
+                numberOfParams: 1,
+                returnType: 'number',
+                service: this.sub,
+                provider: "-1"
             }
+
+
         ]
 
         this.serviceIndex = new ServiceIndex(services)
@@ -28,6 +40,11 @@ export class ArithmeticLogicModule extends InfoSecModule {
 
         return params.reduce((acc,curr) => acc + curr)
     
+    }
+
+    sub = (params: any[]) : number => {
+        
+        return params.reduce((acc,curr) => acc - curr)
     }
 
 }

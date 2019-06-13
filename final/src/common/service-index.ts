@@ -6,7 +6,7 @@ export interface Service {
     numberOfParams: number
     returnType: string
     service: Function
-    provider: number
+    provider: string
 }
 
 export interface ServiceRequest {
@@ -50,6 +50,28 @@ export class ServiceIndex {
     findService = (serviceName: string) : Service => {
 
         return this.services.filter(service => service.serviceName == serviceName)[0]
+
+    }
+
+    removeService = (serviceName: string, nodeId: string) : void => {
+
+        console.log(this.services)
+
+        console.log(parseInt(nodeId,16))
+
+        this.services = this.services.filter(service => service.serviceName != serviceName && service.provider != nodeId)
+        
+        
+    
+    }
+
+    removeServicesFromNode = (nodeId: string) : void => {
+
+        console.log(this.services)
+
+        this.services = this.services.filter(service => service.provider != nodeId)
+
+        console.log(this.services)
 
     }
 
