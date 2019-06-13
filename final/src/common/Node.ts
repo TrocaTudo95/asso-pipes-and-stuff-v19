@@ -363,7 +363,7 @@ class UI {
 
             shape = this.createGraphElement(event.offsetX - compensateOffsetX,event.offsetY - compensateOffsetY,serviceName,color,0,1)
             const inputElement = new InputElement(shape)
-            inputElement.value = 'joao'
+            inputElement.value = "16"
             this.node.elementList[shape.id] = inputElement //TODO remover hardcoded
             
         }

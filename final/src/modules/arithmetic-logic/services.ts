@@ -33,7 +33,7 @@ export class ArithmeticLogicModule extends InfoSecModule {
                 serviceDescription: 'Multiply list of numbers',
                 params: ['Array of Numbers to be multiplied'],
                 paramsType: ['Array of Numbers'],
-                numberOfParams: 1,
+                numberOfParams: 2,
                 returnType: 'number',
                 service: this.prod,
                 provider: "-1"
@@ -43,7 +43,7 @@ export class ArithmeticLogicModule extends InfoSecModule {
                 serviceDescription: 'Apply and operator to list of numbers',
                 params: ['Array of Numbers where operator will apply'],
                 paramsType: ['Array of Numbers'],
-                numberOfParams: 1,
+                numberOfParams: 2,
                 returnType: 'number',
                 service: this.and,
                 provider: "-1"
@@ -53,7 +53,7 @@ export class ArithmeticLogicModule extends InfoSecModule {
                 serviceDescription: 'Apply or operator to list of numbers',
                 params: ['Array of Numbers where operator will apply'],
                 paramsType: ['Array of Numbers'],
-                numberOfParams: 1,
+                numberOfParams: 2,
                 returnType: 'number',
                 service: this.or,
                 provider: "-1"
@@ -63,7 +63,7 @@ export class ArithmeticLogicModule extends InfoSecModule {
                 serviceDescription: 'Apply xor operator to list of numbers',
                 params: ['Array of Numbers where operator will apply'],
                 paramsType: ['Array of Numbers'],
-                numberOfParams: 1,
+                numberOfParams: 2,
                 returnType: 'number',
                 service: this.xor,
                 provider: "-1"
