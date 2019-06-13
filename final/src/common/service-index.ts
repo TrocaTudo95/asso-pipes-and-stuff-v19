@@ -47,9 +47,9 @@ export class ServiceIndex {
         this.services.push(service)
     }
 
-    findService = (serviceName: string) : Service => {
+    findService = (serviceName: string, nodeId: string) : Service => {
 
-        return this.services.filter(service => service.serviceName == serviceName)[0]
+        return this.services.filter(service => service.serviceName == serviceName && service.provider == nodeId)[0]
 
     }
 

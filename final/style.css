@@ -27,7 +27,7 @@ body div#pallete ul {
 body div#pallete ul li {
     padding: 10px;
     margin: 0.5em 1em;
-    border: 1.5px solid black;
+    border: 1px solid black;
     width: 120px;
     height: 40px;
     text-align: center;
@@ -35,16 +35,4 @@ body div#pallete ul li {
     display: flex;
     justify-content: center;
     flex-direction: column;
-}
-
-body div#pallete ul li#inputidffffff {
-
-    border-radius: 50%
-
-}
-
-body div#pallete ul li#outputidd1d1d1 {
-
-    border-radius: 50%
-
 }

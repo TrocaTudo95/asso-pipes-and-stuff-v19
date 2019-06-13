@@ -17,7 +17,7 @@
     "webpack": "^4.29.6",
     "webpack-cli": "^3.2.3",
     "webpack-dev-server": "^3.2.1",
-    "jointjs": "^3.0.0",
+    "jointjs": "^2.2.0",
     "@types/jointjs": "^2.0.0",
     "backbone": "^1.4.0",
     "@types/lodash": "^4.14.134"

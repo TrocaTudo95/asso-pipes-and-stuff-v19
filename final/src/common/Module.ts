@@ -11,7 +11,7 @@ export abstract class InfoSecModule {
 
     executeService(serviceRequest: ServiceRequest) : any {
 
-        const service = this.serviceIndex.findService(serviceRequest.serviceName)
+        const service = this.serviceIndex.findService(serviceRequest.serviceName, "-1")
 
         //make some validations (number of arguments and type)
 

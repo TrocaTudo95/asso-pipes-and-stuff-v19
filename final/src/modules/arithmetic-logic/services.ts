@@ -13,7 +13,7 @@ export class ArithmeticLogicModule extends InfoSecModule {
                 serviceDescription: 'Sum list of numbers',
                 params: ['Array of Numbers to be summed up'],
                 paramsType: ['Array of Numbers'],
-                numberOfParams: 1,
+                numberOfParams: 2,
                 returnType: 'number',
                 service: this.sum,
                 provider: "-1"
@@ -23,7 +23,7 @@ export class ArithmeticLogicModule extends InfoSecModule {
                 serviceDescription: 'Sub list of numbers',
                 params: ['Array of Numbers to be sub down'],
                 paramsType: ['Array of Numbers'],
-                numberOfParams: 1,
+                numberOfParams: 2,
                 returnType: 'number',
                 service: this.sub,
                 provider: "-1"

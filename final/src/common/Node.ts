@@ -4,6 +4,7 @@ import { ServiceIndex, ServiceRequest, ServiceReply } from "./service-index";
 import * as joint from './joint-min'
 import * as _ from 'lodash';
 import * as backbone from 'backbone';
+import { AbstractElement, InputElement, OutputElement, ServiceElement, Context } from "./GraphInterpreter";
 
 export class InfoSecNode implements Observer {
     
@@ -15,18 +16,17 @@ export class InfoSecNode implements Observer {
     brokerInterface: BrokerInterface
     serviceLocator: ServiceIndex
     nodeId : string = Math.floor(Math.random() * 16777216).toString(16)
-    ui : UI = new UI()
+    ui : UI
     knownNodes : string[] = [this.nodeId]
     observerId : number
+
+    elementList : any = {}
+
+    context : Context
 
     constructor(module: InfoSecModule) {
 
         this.module = module
-
-        // window.addEventListener('beforeunload',this.leave)
-        // window.addEventListener('close',this.leave)
-
-        this.ui.setHandleClose(this.leave)
 
         this.brokerInterface = new BrokerInterface(InfoSecNode.host,InfoSecNode.port,this.getNodeName())
         this.brokerInterface.addObserver(this)
@@ -34,6 +34,11 @@ export class InfoSecNode implements Observer {
         this.serviceLocator = new ServiceIndex([])
         
         this.initialize()  
+
+        this.ui = new UI(this, this.run)
+        this.ui.setHandleClose(this.leave)
+
+        this.context = new Context(this)
         
     }
 
@@ -167,26 +172,25 @@ export class InfoSecNode implements Observer {
 
     }
 
-    requestService = async (serviceName: string, params: any[]) : Promise<ServiceReply> => {
+    requestService = async (serviceName: string, provider: string, params: any[]) : Promise<ServiceReply> => {
 
         return new Promise((res,rej) => {
 
-            let remoteService = this.serviceLocator.findService(serviceName)
-            let localService = this.module.serviceIndex.findService(serviceName)
+            let service = this.findService(serviceName, provider)
 
-            if(remoteService != undefined) {
+            if(service.provider != "-1") {
 
                 let serviceRequest : ServiceRequest = {
-                    serviceName: remoteService.serviceName,
+                    serviceName: service.serviceName,
                     params: params,
                 }
     
                 try {
     
                     const requestId = `${this.nodeId}REQ${InfoSecNode.requestNumber++}`
-                    const requestTopic = `service/${remoteService.provider}/${remoteService.serviceName}/${requestId}`
+                    const requestTopic = `service/${service.provider}/${service.serviceName}/${requestId}`
                     const message = JSON.stringify({serviceRequest: serviceRequest})
-                    const replyTopic = `serviceReply/${remoteService.provider}/${remoteService.serviceName}/${requestId}`
+                    const replyTopic = `serviceReply/${service.provider}/${service.serviceName}/${requestId}`
     
                     fetchMQTT(this.brokerInterface,requestTopic,replyTopic,message).then(reply => {
 
@@ -228,10 +232,38 @@ export class InfoSecNode implements Observer {
         this.observerId = observerId
     }
 
+    findService = (serviceName : string, provider: string) => {
+
+        const localService = this.module.serviceIndex.findService(serviceName, "-1")
+        if(localService != undefined)
+            return localService
+        
+        return this.serviceLocator.findService(serviceName, provider)
+        
+    }
+
+    run = async (event : any) => {
+
+
+        let key = event.keyCode ? event.keyCode : event.which;
+
+        if(key == '13') {
+            
+            const outputElement : OutputElement = this.elementList[this.elementList.outputId]
+
+            const finalResult = await outputElement.interpret(this.context)
+
+            outputElement.shape.attr('.label/text', finalResult.result)
+
+        }
+
+    }
+
 }
 
 class UI {
 
+    node : InfoSecNode
     services = document.querySelector('ul')
     diagramDiv = document.getElementById('diagram')
 
@@ -240,24 +272,29 @@ class UI {
     graph : any
     paper : any
 
-    constructor() {
+    constructor(node : InfoSecNode, runListener : EventListener) {
+
+        this.node = node
 
         this.addService('input', 'ffffff')
         this.addService('output', 'd1d1d1')
 
         this.joint = joint as any
         this.graph = new this.joint.dia.Graph
+        this.graph.on('change:source change:target', this.linkElements)
 
         this.diagramDiv.addEventListener('dragover', (event) => event.preventDefault())
         this.diagramDiv.addEventListener('drop', this.dropElement)
-
+        
         this.paper = new this.joint.dia.Paper({
             el: document.getElementById('diagram'),
             model: this.graph,
             width: 1200,
             height: 600,
-            gridSize: 1
-        });
+            gridSize: 1,
+        })
+
+        window.addEventListener('keyup', runListener)
 
     }
 
@@ -317,51 +354,106 @@ class UI {
         const nodeId = comps[1]
 
         let color = `#${nodeId}`
+
+        const service = this.node.findService(serviceName, nodeId)
+
+        let shape : any = null
  
-        if(serviceName == 'input' || serviceName == 'output') {
+        if(serviceName == 'input') {
 
+            shape = this.createGraphElement(event.offsetX - compensateOffsetX,event.offsetY - compensateOffsetY,serviceName,color,0,1)
+            const inputElement = new InputElement(shape)
+            inputElement.value = 'joao'
+            this.node.elementList[shape.id] = inputElement //TODO remover hardcoded
             
-            const ellipse = new this.joint.shapes.standard.Ellipse();
-            ellipse.position(event.offsetX - compensateOffsetX, event.offsetY - compensateOffsetY)
+        }
 
-            ellipse.resize(140, 70) 
-            
-            ellipse.attr({
-                body: {
-                    fill: color
-                },
-                label: {
-                    text: originElement.innerHTML,
-                    fill: 'black'
-                }
-            });
-        
-            ellipse.addTo(this.graph);
+        else if (serviceName == 'output') {
 
+            shape = this.createGraphElement(event.offsetX - compensateOffsetX,event.offsetY - compensateOffsetY,serviceName,color,1,0)
+            this.node.elementList[shape.id] = new OutputElement(shape)
+            this.node.elementList.outputId = shape.id
 
         }
 
         else {
 
-            const rect = new this.joint.shapes.standard.Rectangle();
-            rect.position(event.offsetX - compensateOffsetX, event.offsetY - compensateOffsetY)
-            rect.resize(140, 60)
-            rect.attr({
-                body: {
-                    fill: color
-                },
-                label: {
-                    text: serviceName,
-                    fill: 'black'
-                }
-            });
-        
-            rect.addTo(this.graph)
+            shape = this.createGraphElement(event.offsetX - compensateOffsetX,event.offsetY - compensateOffsetY,serviceName,color,service.numberOfParams,1)
+            this.node.elementList[shape.id] = new ServiceElement(shape,service)
 
         }
 
-        
+        shape.addTo(this.graph)
 
+    }
+
+    createGraphElement = (x: number, y: number, name: string, color: string, numberInPorts: number, numberOutPorts: number) =>  {
+
+        let inPorts = []
+        let outPorts = []
+
+        for(let i = 0; i < numberInPorts; i++) {
+            inPorts.push(`in${i+1}`)
+        }
+
+        for(let i = 0; i < numberOutPorts; i++) {
+            outPorts.push(`out${i+1}`)
+        }
+
+        let shape = new this.joint.shapes.devs.Model({
+            
+            attrs: {
+                rect: {
+                    fill: color
+                },
+                '.label': {
+                    text: name, 'ref-x': .5, 'ref-y': .2
+                }
+            },
+
+            size: {
+                width:140,
+                height: 60
+            },
+
+            position: {
+                x: x,
+                y: y
+            },
+            inPorts: inPorts,
+            outPorts:  outPorts,
+            ports: {
+                groups: {
+                    'in': {
+                        attrs: {
+                            '.port-body': {
+                                fill: '#16A085'
+                            }
+                        }
+                    },
+                    'out': {
+                        attrs: {
+                            '.port-body': {
+                                fill: '#E74C3C'
+                            }
+                        }
+                    }
+                }
+            },
+        })
+
+        return shape
+
+    }
+
+    linkElements = (link : any) => {
+
+        let source = this.node.elementList[link.attributes.source.id]
+        let target = this.node.elementList[link.attributes.target.id]
+
+        if(target != undefined)
+            target.children.push(source)
+      
     }
 
     buildBlockOfService = () => {
