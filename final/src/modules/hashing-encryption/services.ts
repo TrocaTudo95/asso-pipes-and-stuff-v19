@@ -1,11 +1,11 @@
 import { ServiceIndex } from "../../common/service-index";
 import { InfoSecModule } from "../../common/Module";
 
-export class ConversionModule extends InfoSecModule {
+export class HashingModule extends InfoSecModule {
 
     constructor() {
 
-        super('ConversionModule')
+        super('HashingModule')
 
         let services = [
             {
@@ -16,16 +16,6 @@ export class ConversionModule extends InfoSecModule {
                 numberOfParams: 1,
                 returnType: 'string',
                 service: this.toUpperCase,
-                provider: "-1"
-            },
-            {
-                serviceName: 'to_lowercase',
-                serviceDescription: 'Transform string to lowercase',
-                params: ['Original String'],
-                paramsType: ['String'],
-                numberOfParams: 1,
-                returnType: 'string',
-                service: this.toLowerCase,
                 provider: "-1"
             }
         ]
@@ -40,21 +30,6 @@ export class ConversionModule extends InfoSecModule {
 
             let inputString : string = input[0] as string
             return input[0].toUpperCase()
-
-        }
-
-        catch(error) {
-            return error
-        }
-
-    }
-
-    toLowerCase = (input: any[]) : string => {
-
-        try {
-
-            let inputString : string = input[0] as string
-            return input[0].toLowerCase()
 
         }
 

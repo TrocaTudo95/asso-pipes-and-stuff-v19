@@ -1,11 +1,11 @@
 import { ServiceIndex } from "../../common/service-index";
 import { InfoSecModule } from "../../common/Module";
 
-export class ConversionModule extends InfoSecModule {
+export class TextModule extends InfoSecModule {
 
     constructor() {
 
-        super('ConversionModule')
+        super('TextModule')
 
         let services = [
             {
@@ -48,6 +48,7 @@ export class ConversionModule extends InfoSecModule {
         }
 
     }
+
 
     toLowerCase = (input: any[]) : string => {
 
