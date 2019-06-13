@@ -3,65 +3,165 @@ import { InfoSecModule } from "../../common/Module";
 
 export class ConversionModule extends InfoSecModule {
 
-    constructor() {
+  constructor() {
 
-        super('ConversionModule')
+    super('ConversionModule')
 
-        let services = [
-            {
-                serviceName: 'to_uppercase',
-                serviceDescription: 'Transform string to uppercase',
-                params: ['Original String'],
-                paramsType: ['String'],
-                numberOfParams: 1,
-                returnType: 'string',
-                service: this.toUpperCase,
-                provider: "-1"
-            },
-            {
-                serviceName: 'to_lowercase',
-                serviceDescription: 'Transform string to lowercase',
-                params: ['Original String'],
-                paramsType: ['String'],
-                numberOfParams: 1,
-                returnType: 'string',
-                service: this.toLowerCase,
-                provider: "-1"
-            }
-        ]
+    let services = [
+      {
+        serviceName: 'to_hexadecimal',
+        serviceDescription: 'Convert string to hexadecimal',
+        params: ['Array with the string to be converted'],
+        paramsType: ['String'],
+        numberOfParams: 1,
+        returnType: 'string',
+        service: this.toHexadecimal,
+        provider: "-1"
+      },
+      {
+        serviceName: 'from_hexadecimal',
+        serviceDescription: 'Convert hexadecimal expression to string',
+        params: ['Array with the string to be converted'],
+        paramsType: ['Array of Numbers'],
+        numberOfParams: 1,
+        returnType: 'string',
+        service: this.fromHexadecimal,
+        provider: "-1"
+      },
+      {
+        serviceName: 'to_binary',
+        serviceDescription: 'Convert string to binary',
+        params: ['Array with the string to be converted'],
+        paramsType: ['String'],
+        numberOfParams: 1,
+        returnType: 'string',
+        service: this.toBinary,
+        provider: "-1"
+      },
+      {
+        serviceName: 'from_binary',
+        serviceDescription: 'Convert binary expression to string',
+        params: ['Array with the string to be converted'],
+        paramsType: ['String'],
+        numberOfParams: 1,
+        returnType: 'string',
+        service: this.fromBinary,
+        provider: "-1"
+      },
+      {
+        serviceName: 'to_base64',
+        serviceDescription: 'Convert string to base64',
+        params: ['Array with the string to be converted'],
+        paramsType: ['String'],
+        numberOfParams: 1,
+        returnType: 'number',
+        service: this.toBase64,
+        provider: "-1"
+      },
+      {
+        serviceName: 'from_base64',
+        serviceDescription: 'Convert base64 expression to string',
+        params: ['Array with the string to be converted'],
+        paramsType: ['String'],
+        numberOfParams: 1,
+        returnType: 'string',
+        service: this.fromBase64,
+        provider: "-1"
+      },
+      {
+        serviceName: 'urlEncode',
+        serviceDescription: 'Encode a Url',
+        params: ['Array with the url to be encoded'],
+        paramsType: ['String'],
+        numberOfParams: 1,
+        returnType: 'string',
+        service: this.urlEncode,
+        provider: "-1"
+      },
+      {
+        serviceName: 'urlDecode',
+        serviceDescription: 'Decode an encoded Url',
+        params: ['Array with the url to be decoded'],
+        paramsType: ['String'],
+        numberOfParams: 1,
+        returnType: 'string',
+        service: this.urlDecode,
+        provider: "-1"
+      }
 
-        this.serviceIndex = new ServiceIndex(services)
+    ]
 
+    this.serviceIndex = new ServiceIndex(services)
+
+  }
+
+
+  stringToBin_Hex(str: string, base: number) {
+
+    return str.replace(/[\s\S]/g, function(str) {
+        str = "00000000".slice(String(str.charCodeAt(0).toString(base)).length) + str.charCodeAt(0).toString(base);
+        return !1 == false ? str : str + " "
+    });
+}
+
+bin_HexToString(str: string, base: number) {
+    str = str.replace(/\s+/g, '');
+    str = str.match(/.{1,8}/g).join(" ");
+
+    var newBinary = str.split(" ");
+    var binaryCode = [];
+
+    for (var i = 0; i < newBinary.length; i++) {
+        binaryCode.push(String.fromCharCode(parseInt(newBinary[i], base)));
     }
 
-    toUpperCase = (input: any[]) : string => {
+    return binaryCode.join("");
+}
 
-        try {
+  toHexadecimal = (input: any[]) : string => {
 
-            let inputString : string = input[0] as string
-            return input[0].toUpperCase()
+    return this.stringToBin_Hex(input[0],16)
 
-        }
+  }
 
-        catch(error) {
-            return error
-        }
+  fromHexadecimal = (input: any[]) : string => {
+    return this.bin_HexToString(input[0],16)
 
-    }
+  }
 
-    toLowerCase = (input: any[]) : string => {
+  toBinary = (input: any[]) : string => {
 
-        try {
+      return  this.stringToBin_Hex(input[0],2)
+  }
 
-            let inputString : string = input[0] as string
-            return input[0].toLowerCase()
+  fromBinary = (input: any[]) : string => {
 
-        }
+    return this.bin_HexToString(input[0],2)
 
-        catch(error) {
-            return error
-        }
+  }
 
-    }
+  toBase64 = (input: any[]) : string => {
+
+    return btoa(input[0])
+
+  }
+
+  fromBase64 = (input: any[]) : string => {
+
+    return atob(input[0])
+
+  }
+
+  urlEncode = (input: any[]) : string => {
+
+    return encodeURIComponent(input[0])
+
+  }
+
+  urlDecode = (input: any[]) : string => {
+
+    return decodeURIComponent(input[0])
+
+  }
 
 }
