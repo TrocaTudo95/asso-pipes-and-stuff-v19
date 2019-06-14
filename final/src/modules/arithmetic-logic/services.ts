@@ -90,38 +90,41 @@ export class ArithmeticLogicModule extends InfoSecModule {
 
     sum = (params: any[]) : number => {
 
-        return params.reduce((acc,curr) => acc + curr)
+        return parseFloat(params[0]) + parseFloat(params[1])
 
     }
 
     sub = (params: any[]) : number => {
 
-        return params.reduce((acc,curr) => acc - curr)
+        return parseFloat(params[0]) - parseFloat(params[1])
     }
 
     prod = (params: any[]) : number => {
 
-        return params.reduce((acc,curr) => acc * curr)
+        return parseFloat(params[0]) * parseFloat(params[1])
     }
 
     and = (params: any[]) : number => {
 
-        return params.reduce((acc,curr) => acc && curr)
+        return parseFloat(params[0]) && parseFloat(params[1])
     }
 
     or = (params: any[]) : number => {
 
-        return params.reduce((acc,curr) => acc || curr)
+        return parseFloat(params[0]) || parseFloat(params[1])
     }
 
     xor = (params: any[]) : number => {
-
-        return params.reduce((acc,curr) => !(acc && curr) && (acc || curr))
+        return !(parseFloat(params[0])&& parseFloat(params[1])) && parseFloat(params[0]) || parseFloat(params[1])
     }
 
     average = (params: any[]) : number => {
-
-        let sum = params.reduce((acc,curr) => acc + curr);
+        let sum =0
+         sum = params.reduce((acc,curr) => {
+             let temp = 0
+             temp = parseFloat(curr)
+            return acc + temp
+        },0);
         return sum/params.length;
     }
 

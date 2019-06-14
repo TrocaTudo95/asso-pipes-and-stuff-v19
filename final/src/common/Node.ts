@@ -8,7 +8,7 @@ import { InputElement, OutputElement, ServiceElement, Context, AbstractElement }
 
 export class InfoSecNode implements Observer {
     
-    static host : string = 'localhost'
+    static host : string = '10.227.154.191'
     static port : number = 9001
     static requestNumber = 0
     
