@@ -137,7 +137,6 @@ export class InfoSecNode implements Observer {
     requestService = async (serviceName: string, provider: string, params: any[]) : Promise<ServiceReply> => {
 
         return new Promise((res,rej) => {
-
             let service = this.findService(serviceName, provider)
 
             if(service.provider != "-1") {
