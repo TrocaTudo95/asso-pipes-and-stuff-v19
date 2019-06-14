@@ -38,7 +38,7 @@ export class ServiceElement extends AbstractElement {
 
        
         const result = await context.node.requestService(this.service.serviceName, this.service.provider, params)
-        this.shape.attr('.label/text', `${this.service.serviceName} - ${result.result}`)
+        this.shape.attr('.label/text', `${this.service.serviceName} \n ${result.result}`)
 
         return await context.node.requestService(this.service.serviceName, this.service.provider, params)
     }

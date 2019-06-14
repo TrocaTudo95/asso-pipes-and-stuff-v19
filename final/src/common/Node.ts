@@ -363,9 +363,10 @@ class UI {
 
             shape = this.createGraphElement(event.offsetX - compensateOffsetX,event.offsetY - compensateOffsetY,serviceName,color,0,1)
             const inputElement = new InputElement(shape)
-            inputElement.value = "16"
             this.node.elementList[shape.id] = inputElement //TODO remover hardcoded
+            this.insertInput(shape, inputElement)
             
+
         }
 
         else if (serviceName == 'output') {
@@ -460,6 +461,13 @@ class UI {
 
 
 
+    }
+
+    insertInput = (shape : any, inputElement : InputElement) => {
+
+        const input = prompt('Insert Input')
+        shape.attr('.label/text', input)
+        inputElement.value = input
     }
 
 }
