@@ -16,7 +16,8 @@ export class ConversionModule extends InfoSecModule {
         numberOfParams: 1,
         returnType: 'string',
         service: this.toHexadecimal,
-        provider: "-1"
+        provider: "-1",
+        available : false
       },
       {
         serviceName: 'from_hexadecimal',
@@ -26,7 +27,8 @@ export class ConversionModule extends InfoSecModule {
         numberOfParams: 1,
         returnType: 'string',
         service: this.fromHexadecimal,
-        provider: "-1"
+        provider: "-1",
+        available : false
       },
       {
         serviceName: 'to_binary',
@@ -36,7 +38,8 @@ export class ConversionModule extends InfoSecModule {
         numberOfParams: 1,
         returnType: 'string',
         service: this.toBinary,
-        provider: "-1"
+        provider: "-1",
+        available : false
       },
       {
         serviceName: 'from_binary',
@@ -46,7 +49,8 @@ export class ConversionModule extends InfoSecModule {
         numberOfParams: 1,
         returnType: 'string',
         service: this.fromBinary,
-        provider: "-1"
+        provider: "-1",
+        available : false
       },
       {
         serviceName: 'to_base64',
@@ -56,7 +60,8 @@ export class ConversionModule extends InfoSecModule {
         numberOfParams: 1,
         returnType: 'number',
         service: this.toBase64,
-        provider: "-1"
+        provider: "-1",
+        available : false
       },
       {
         serviceName: 'from_base64',
@@ -66,7 +71,8 @@ export class ConversionModule extends InfoSecModule {
         numberOfParams: 1,
         returnType: 'string',
         service: this.fromBase64,
-        provider: "-1"
+        provider: "-1",
+        available : false
       },
       {
         serviceName: 'urlEncode',
@@ -76,7 +82,8 @@ export class ConversionModule extends InfoSecModule {
         numberOfParams: 1,
         returnType: 'string',
         service: this.urlEncode,
-        provider: "-1"
+        provider: "-1",
+        available : false
       },
       {
         serviceName: 'urlDecode',
@@ -86,7 +93,8 @@ export class ConversionModule extends InfoSecModule {
         numberOfParams: 1,
         returnType: 'string',
         service: this.urlDecode,
-        provider: "-1"
+        provider: "-1",
+        available : false
       }
 
     ]
@@ -120,7 +128,7 @@ bin_HexToString(str: string, base: number) {
 
   toHexadecimal = (input: any[]) : string => {
 
-    return parseInt(input[0]).toString(16)
+    return `0x${parseInt(input[0]).toString(16)}`
 
   }
 

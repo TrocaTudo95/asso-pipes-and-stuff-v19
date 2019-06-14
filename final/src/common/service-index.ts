@@ -7,6 +7,7 @@ export interface Service {
     returnType: string
     service: Function
     provider: string
+    available : boolean
 }
 
 export interface ServiceRequest {
@@ -29,7 +30,7 @@ export class ServiceIndex {
 
     getServicesForBroker = () : Service[] => {
         
-        return this.services.map(service => {
+        return this.services.filter(service => service.available).map(service => {
             return {
                 serviceName: service.serviceName, 
                 serviceDescription: service.serviceDescription,
@@ -38,13 +39,19 @@ export class ServiceIndex {
                 returnType: service.returnType,
                 numberOfParams: service.numberOfParams,
                 provider: service.provider,
-                service: undefined
+                service: undefined,
+                available: service.available
             }
         })
     }
     
-    addService = (service: Service) : void => {
-        this.services.push(service)
+    addService = (service: Service) : boolean => {
+        
+        if(this.findService(service.serviceName, service.provider) == undefined) {
+            this.services.push(service)
+            return true
+        }
+        return false
     }
 
     findService = (serviceName: string, nodeId: string) : Service => {
@@ -55,23 +62,33 @@ export class ServiceIndex {
 
     removeService = (serviceName: string, nodeId: string) : void => {
 
-        console.log(this.services)
-
-        console.log(parseInt(nodeId,16))
-
         this.services = this.services.filter(service => service.serviceName != serviceName && service.provider != nodeId)
-        
-        
-    
+            
     }
 
     removeServicesFromNode = (nodeId: string) : void => {
 
-        console.log(this.services)
-
         this.services = this.services.filter(service => service.provider != nodeId)
 
-        console.log(this.services)
+    }
+
+    findServiceForAnnouncement = (serviceName: string) : Service => {
+
+        let service = this.getServices().filter(service => service.serviceName == serviceName)[0]
+
+        return {...service, service: undefined}
+
+    }
+
+    makeServiceAvailable = (serviceName : string) => {
+
+        this.findService(serviceName,"-1").available = true
+
+    }
+
+    makeServiceUnavailable = (serviceName : string) => {
+
+        this.findService(serviceName,"-1").available = false
 
     }
 

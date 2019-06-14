@@ -16,7 +16,8 @@ export class ArithmeticLogicModule extends InfoSecModule {
                 numberOfParams: 2,
                 returnType: 'number',
                 service: this.sum,
-                provider: "-1"
+                provider: "-1",
+                available : false
             },
             {
                 serviceName: 'sub',
@@ -26,7 +27,8 @@ export class ArithmeticLogicModule extends InfoSecModule {
                 numberOfParams: 2,
                 returnType: 'number',
                 service: this.sub,
-                provider: "-1"
+                provider: "-1",
+                available : false
             },
             {
                 serviceName: 'product',
@@ -36,7 +38,8 @@ export class ArithmeticLogicModule extends InfoSecModule {
                 numberOfParams: 2,
                 returnType: 'number',
                 service: this.prod,
-                provider: "-1"
+                provider: "-1",
+                available : false
             },
             {
                 serviceName: 'and',
@@ -46,7 +49,8 @@ export class ArithmeticLogicModule extends InfoSecModule {
                 numberOfParams: 2,
                 returnType: 'number',
                 service: this.and,
-                provider: "-1"
+                provider: "-1",
+                available : false
             },
             {
                 serviceName: 'or',
@@ -56,7 +60,8 @@ export class ArithmeticLogicModule extends InfoSecModule {
                 numberOfParams: 2,
                 returnType: 'number',
                 service: this.or,
-                provider: "-1"
+                provider: "-1",
+                available : false
             },
             {
                 serviceName: 'xor',
@@ -66,7 +71,8 @@ export class ArithmeticLogicModule extends InfoSecModule {
                 numberOfParams: 2,
                 returnType: 'number',
                 service: this.xor,
-                provider: "-1"
+                provider: "-1",
+                available : false
             },
             {
                 serviceName: 'average',
@@ -76,7 +82,8 @@ export class ArithmeticLogicModule extends InfoSecModule {
                 numberOfParams: 1,
                 returnType: 'number',
                 service: this.average,
-                provider: "-1"
+                provider: "-1",
+                available : false
             }
 
 

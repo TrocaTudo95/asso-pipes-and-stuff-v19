@@ -16,7 +16,8 @@ export class TextModule extends InfoSecModule {
                 numberOfParams: 1,
                 returnType: 'string',
                 service: this.toUpperCase,
-                provider: "-1"
+                provider: "-1",
+                available : false
             },
             {
                 serviceName: 'to_lowercase',
@@ -26,7 +27,8 @@ export class TextModule extends InfoSecModule {
                 numberOfParams: 1,
                 returnType: 'string',
                 service: this.toLowerCase,
-                provider: "-1"
+                provider: "-1",
+                available : false
             }
         ]
 

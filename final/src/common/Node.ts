@@ -1,6 +1,6 @@
 import { InfoSecModule } from "./Module";
 import { BrokerInterface, Observer, fetchMQTT } from "../broker-interface/broker-interface";
-import { ServiceIndex, ServiceRequest, ServiceReply } from "./service-index";
+import { ServiceIndex, ServiceRequest, ServiceReply, Service } from "./service-index";
 import * as joint from './joint-min'
 import * as _ from 'lodash';
 import * as backbone from 'backbone';
@@ -8,7 +8,7 @@ import { InputElement, OutputElement, ServiceElement, Context, AbstractElement }
 
 export class InfoSecNode implements Observer {
     
-    static host : string = '10.227.154.191'
+    static host : string = 'localhost'
     static port : number = 9001
     static requestNumber = 0
     
@@ -51,19 +51,15 @@ export class InfoSecNode implements Observer {
         try {
             
             await this.brokerInterface.connect()
-            await this.brokerInterface.publishMessage(`new/${this.nodeId}`, JSON.stringify(this.module.serviceIndex.getServicesForBroker()))
-            await this.brokerInterface.subscribeToTopics(['services/+','new/+', 'leave/+'])
+            await this.brokerInterface.publishMessage(`new/${this.nodeId}`,JSON.stringify({}))
+            await this.brokerInterface.subscribeToTopics(['new/+', 'services/+','leave/+', 'newService/+', '/removeService/+'])
             
-            let promises : Promise<string>[] = []
             this.module.serviceIndex.getServices().forEach(service => {
                 
-                promises.push(this.brokerInterface.subscribeToTopic(`service/${this.nodeId}/${service.serviceName}/+`))
                 this.ui.addService(service.serviceName, this.nodeId)
                 
             })
             
-            await Promise.all(promises)
-
         }
 
         catch(e) {
@@ -72,17 +68,55 @@ export class InfoSecNode implements Observer {
 
     }
 
+    announceService = async (serviceName : string) => {
+
+        try {
+            await this.brokerInterface.publishMessage(`newService/${this.nodeId}`, JSON.stringify(this.module.serviceIndex.findServiceForAnnouncement(serviceName)))
+            await this.brokerInterface.subscribeToTopic(`service/${this.nodeId}/${serviceName}/+`)
+            this.module.serviceIndex.makeServiceAvailable(serviceName)
+        }
+
+        catch(e) {
+            console.log(e)
+        }
+
+    }
+
+    cancelServiceToNetwork = (serviceName : string) => {
+
+
+
+    }
+
     receiveMessage = (topic:string, message : any) : void => {
+
+        console.log(`received msg on topic ${topic}`)
 
         const topicLevels : string[] = topic.split('/')
 
-        if(this.knownNodes.includes(topicLevels[1]) && topicLevels[0] != 'service' && topicLevels[0] != 'leave')
+        let ignore = false
+
+        /**
+         * Ignore services of already known nodes and own services (own id included in knownNodes)
+         */
+
+        if(this.knownNodes.includes(topicLevels[1]) && topicLevels[0] == 'services')
+            ignore = true
+
+        /**
+         * Ignore own requests for newService and removeService
+         */
+        
+        if(topicLevels[1] == this.nodeId && (topicLevels[0] == 'newService' || topicLevels[0] == 'removeService'))
+            ignore = true
+
+        if(ignore)
             return
         
         console.log(`processing msg received on topic ${topic}`)
 
         if(topicLevels[0] == 'new') {
-            this.onNewNode(message, topicLevels[1])
+            this.onNewNode(topicLevels[1])
         }
         else if(topicLevels[0] == 'services') {
             this.addServicesOfNode(message, topicLevels[1])
@@ -90,6 +124,10 @@ export class InfoSecNode implements Observer {
 
         else if(topicLevels[0] == 'leave') {
             this.removeServicesOfNode(topicLevels[1])
+        }
+
+        else if(topicLevels[0] == 'newService') {
+            this.addServiceOfNode(message, topicLevels[1])
         }
 
         else if(topicLevels[0] == 'service') {
@@ -106,23 +144,26 @@ export class InfoSecNode implements Observer {
 
     }
 
-    onNewNode = (message : Object, nodeId: string) => {
+    onNewNode = (nodeId: string) => {
 
         this.brokerInterface.publishMessage(`services/${this.nodeId}`,JSON.stringify(this.module.serviceIndex.getServicesForBroker()))
-        this.addServicesOfNode(message,nodeId)
           
     }
 
     addServicesOfNode = (message: any, nodeId: string) => {
 
         for(let i = 0; i < message.length; i++) {
-
-            this.serviceLocator.addService({...message[i], provider: nodeId })
-            this.ui.addService(message[i].serviceName, nodeId)
-
+            this.addServiceOfNode({...message[i], provider: nodeId }, nodeId)
         }
 
         this.knownNodes.push(nodeId)
+
+    }
+
+    addServiceOfNode = (service: Service, nodeId: string) => {
+
+        if(this.serviceLocator.addService({...service, provider: nodeId }))
+            this.ui.addService(service.serviceName, nodeId)
 
     }
 
@@ -215,7 +256,7 @@ export class InfoSecNode implements Observer {
 
             const finalResult = await outputElement.interpret(this.context)
 
-            outputElement.shape.attr('.label/text', finalResult.result)
+            outputElement.shape.attr('.label/text', `output \n ${finalResult.result}`)
 
         }
         else if(key == 8) {
@@ -272,12 +313,20 @@ class UI {
         li.setAttribute('class',`nodeId${nodeId}`)
         li.innerHTML = `${serviceName}`
 
-        if( serviceName != 'input' && serviceName != 'output')
+        if(serviceName != 'input' && serviceName != 'output') {
             li.innerHTML += `@ #${nodeId}`
 
+            if(nodeId == this.node.nodeId) {
+                let checkbox = document.createElement('input')
+                checkbox.setAttribute('type','checkbox')
+                checkbox.addEventListener('input',(event: Event) => this.handleServiceCheckBox(checkbox,serviceName))
+                li.appendChild(checkbox)
+            }
+        }
         li.style.backgroundColor = `#${nodeId}`
         li.setAttribute('draggable', 'true')
         li.addEventListener('dragstart', this.dragElement)
+
         this.services.appendChild(li)
     }
 
@@ -434,17 +483,28 @@ class UI {
 
         const inputElement = element as InputElement
         const input = prompt('Insert Input')
-        shape.attr('.label/text', input)
+        shape.attr('.label/text', `input \n ${input}`)
         inputElement.value = input
     }
 
     editInput = (cell : any) => {
 
-        console.log(cell)
         const abstractElement = cell.model.attributes.abstractElement as AbstractElement
         if(abstractElement.serviceName == 'input') {
             this.insertInput(cell.model, abstractElement)
         }   
+    }
+
+    handleServiceCheckBox = (checkBox : HTMLInputElement, serviceName: string) => {
+
+
+        if(checkBox.checked) {
+            console.log("checked")
+            this.node.announceService(serviceName)
+        }
+        else
+            console.log("not checked")
+
     }
 
 }
