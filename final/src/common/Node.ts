@@ -341,9 +341,14 @@ class UI {
         }
         li.style.backgroundColor = `#${nodeId}`
         li.setAttribute('draggable', 'true')
-        li.addEventListener('dragstart', this.dragElement)
+        li.addEventListener('dragstart', (event : Event) => this.dragElement(event,nodeId, serviceName))
 
-        this.services.appendChild(li)
+        
+        if(serviceName == 'input' || serviceName == 'output')
+            this.services.appendChild(li)    
+        
+        else 
+            this.services.insertBefore(li, this.services.children[2])
     }
 
     removeService = (serviceName: string, nodeId: string) => {
@@ -365,9 +370,9 @@ class UI {
         window.addEventListener('beforeunload', handler)
     }
 
-    dragElement = (event:any) => {
+    dragElement = (event:any, id: string, serviceName: string) => {
 
-        event.dataTransfer.setData("originElementId", event.target.id)
+        event.dataTransfer.setData("originElementId", `${serviceName}id${id}`)
         event.dataTransfer.setData("originOffsetX", event.offsetX)
         event.dataTransfer.setData("originOffsetY", event.offsetY)
 
@@ -381,14 +386,13 @@ class UI {
         const compensateOffsetY = event.dataTransfer.getData("originOffsetY")
 
         const comps = originElement.getAttribute('id').split('id')
-        
+
         const serviceName = comps[0]
         const nodeId = comps[1]
 
         let color = `#${nodeId}`
 
         const service = this.node.findService(serviceName, nodeId)
-
         let shape : any = null
 
         let abstractElement : AbstractElement = null

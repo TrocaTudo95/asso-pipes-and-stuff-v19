@@ -62,7 +62,7 @@ export class ServiceIndex {
 
     removeService = (serviceName: string, nodeId: string) : void => {
 
-        this.services = this.services.filter(service => service.serviceName != serviceName && service.provider != nodeId)
+        this.services = this.services.filter(service => !(service.serviceName == serviceName && service.provider == nodeId))
             
     }
 
