@@ -218,6 +218,9 @@ export class InfoSecNode implements Observer {
             outputElement.shape.attr('.label/text', finalResult.result)
 
         }
+        else if(key == 8) {
+            this.ui.graph.clear()
+        }
 
     }
 
@@ -252,7 +255,7 @@ class UI {
             el: document.getElementById('diagram'),
             model: this.graph,
             width: 1200,
-            height: 600,
+            height: 5000,
             gridSize: 1,
         })
 
@@ -441,9 +444,7 @@ class UI {
         const abstractElement = cell.model.attributes.abstractElement as AbstractElement
         if(abstractElement.serviceName == 'input') {
             this.insertInput(cell.model, abstractElement)
-        }
-            
-
+        }   
     }
 
 }
