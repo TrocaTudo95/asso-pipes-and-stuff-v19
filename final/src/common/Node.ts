@@ -52,7 +52,7 @@ export class InfoSecNode implements Observer {
             
             await this.brokerInterface.connect()
             await this.brokerInterface.publishMessage(`new/${this.nodeId}`,JSON.stringify({}))
-            await this.brokerInterface.subscribeToTopics(['new/+', 'services/+','leave/+', 'newService/+', '/removeService/+'])
+            await this.brokerInterface.subscribeToTopics(['new/+', 'services/+','leave/+', 'newService/+', 'removeService/+/+'])
             
             this.module.serviceIndex.getServices().forEach(service => {
                 
@@ -82,15 +82,21 @@ export class InfoSecNode implements Observer {
 
     }
 
-    cancelServiceToNetwork = (serviceName : string) => {
+    cancelServiceToNetwork = async (serviceName : string) => {
 
+        try {
+            await this.brokerInterface.publishMessage(`removeService/${this.nodeId}/${this.module.serviceIndex.findServiceForAnnouncement(serviceName).serviceName}`, JSON.stringify({}))
+            await this.brokerInterface.unSubscribeToTopic(`service/${this.nodeId}/${serviceName}/+`)
+            this.module.serviceIndex.makeServiceUnavailable(serviceName)
+        }
 
+        catch(err) {
+            console.log(err)
+        }
 
     }
 
     receiveMessage = (topic:string, message : any) : void => {
-
-        console.log(`received msg on topic ${topic}`)
 
         const topicLevels : string[] = topic.split('/')
 
@@ -116,7 +122,7 @@ export class InfoSecNode implements Observer {
         console.log(`processing msg received on topic ${topic}`)
 
         if(topicLevels[0] == 'new') {
-            this.onNewNode(topicLevels[1])
+            this.onNewNode()
         }
         else if(topicLevels[0] == 'services') {
             this.addServicesOfNode(message, topicLevels[1])
@@ -128,6 +134,10 @@ export class InfoSecNode implements Observer {
 
         else if(topicLevels[0] == 'newService') {
             this.addServiceOfNode(message, topicLevels[1])
+        }
+
+        else if(topicLevels[0] == 'removeService') {
+            this.removeServiceOfNode(topicLevels[2], topicLevels[1])
         }
 
         else if(topicLevels[0] == 'service') {
@@ -144,7 +154,7 @@ export class InfoSecNode implements Observer {
 
     }
 
-    onNewNode = (nodeId: string) => {
+    onNewNode = () => {
 
         this.brokerInterface.publishMessage(`services/${this.nodeId}`,JSON.stringify(this.module.serviceIndex.getServicesForBroker()))
           
@@ -175,10 +185,16 @@ export class InfoSecNode implements Observer {
 
     }
 
+    removeServiceOfNode = (serviceName: string, nodeId: string) => {
+
+        this.serviceLocator.removeService(serviceName, nodeId)
+        this.ui.removeService(serviceName, nodeId)
+
+    }
+
     requestService = async (serviceName: string, provider: string, params: any[]) : Promise<ServiceReply> => {
 
         return new Promise((res,rej) => {
-
             let service = this.findService(serviceName, provider)
 
             if(service.provider != "-1") {
@@ -296,7 +312,7 @@ class UI {
             el: document.getElementById('diagram'),
             model: this.graph,
             width: 1200,
-            height: 5000,
+            height: 1000,
             gridSize: 1,
         })
 
@@ -314,7 +330,7 @@ class UI {
         li.innerHTML = `${serviceName}`
 
         if(serviceName != 'input' && serviceName != 'output') {
-            li.innerHTML += `@ #${nodeId}`
+            li.innerHTML += `\n@ #${nodeId}`
 
             if(nodeId == this.node.nodeId) {
                 let checkbox = document.createElement('input')
@@ -435,7 +451,7 @@ class UI {
             },
 
             size: {
-                width:140,
+                width:160,
                 height: 60
             },
 
@@ -450,14 +466,14 @@ class UI {
                     'in': {
                         attrs: {
                             '.port-body': {
-                                fill: '#16A085'
+                                fill: '#ce3b06'
                             }
                         }
                     },
                     'out': {
                         attrs: {
                             '.port-body': {
-                                fill: '#E74C3C'
+                                fill: '#1062e8'
                             }
                         }
                     }
@@ -483,8 +499,10 @@ class UI {
 
         const inputElement = element as InputElement
         const input = prompt('Insert Input')
-        shape.attr('.label/text', `input \n ${input}`)
-        inputElement.value = input
+        if(input != null && input != '') {
+            inputElement.value = input
+            shape.attr('.label/text', `input \n ${input}`)
+        }
     }
 
     editInput = (cell : any) => {
@@ -499,11 +517,11 @@ class UI {
 
 
         if(checkBox.checked) {
-            console.log("checked")
             this.node.announceService(serviceName)
         }
-        else
-            console.log("not checked")
+        else {
+            this.node.cancelServiceToNetwork(serviceName)
+        }
 
     }
 

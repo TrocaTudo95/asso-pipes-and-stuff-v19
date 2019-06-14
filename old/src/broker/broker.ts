@@ -10,7 +10,6 @@ export class Broker {
 
     async pull(publisher: BrokerPublisher): Promise<void> {
         publisher.queue.pop().then(res => {
-            console.log(this.name + " " + res)
             this.subscribers.forEach(subscriber => subscriber.notify())
             this.push(res)
         })

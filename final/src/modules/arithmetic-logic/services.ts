@@ -113,16 +113,33 @@ export class ArithmeticLogicModule extends InfoSecModule {
 
     and = (params: any[]) : number => {
 
-        return parseFloat(params[0]) && parseFloat(params[1])
+        const a = parseFloat(params[0])
+        const b = parseFloat(params[1])
+
+        const or = a && b
+
+        return or ? 1 : 0
     }
 
     or = (params: any[]) : number => {
 
-        return parseFloat(params[0]) || parseFloat(params[1])
+        const a = parseFloat(params[0])
+        const b = parseFloat(params[1])
+
+        const or = a || b
+
+        return or ? 1 : 0
+
     }
 
     xor = (params: any[]) : number => {
-        return !(parseFloat(params[0])&& parseFloat(params[1])) && parseFloat(params[0]) || parseFloat(params[1])
+
+        const a = parseFloat(params[0])
+        const b = parseFloat(params[1])
+
+        const xor = (a && !b) || (!a && b)
+
+        return xor ? 1 : 0
     }
 
     average = (params: any[]) : number => {

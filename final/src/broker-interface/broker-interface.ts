@@ -39,7 +39,7 @@ export class BrokerInterface implements Subject {
     
                 this.mqttClient.on('error', () => {
     
-                    console.log(`${this.clientId} failed trying conneting to Broker`)
+                    console.log(`${this.clientId} failed trying connecting to Broker`)
                     rej(`${this.clientId} failed trying connecting to Broker`)
     
                 })

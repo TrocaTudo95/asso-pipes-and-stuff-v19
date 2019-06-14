@@ -11,8 +11,8 @@ export class TextModule extends InfoSecModule {
             {
                 serviceName: 'to_uppercase',
                 serviceDescription: 'Transform string to uppercase',
-                params: ['Original String'],
-                paramsType: ['String'],
+                params: ['two strings'],
+                paramsType: ['Array of Strings'],
                 numberOfParams: 1,
                 returnType: 'string',
                 service: this.toUpperCase,
@@ -28,7 +28,18 @@ export class TextModule extends InfoSecModule {
                 returnType: 'string',
                 service: this.toLowerCase,
                 provider: "-1",
-                available : false
+                available: false
+            },
+            {
+                serviceName: 'concat',
+                serviceDescription: 'Concat two strings',
+                params: ['Original String'],
+                paramsType: ['String'],
+                numberOfParams: 2,
+                returnType: 'string',
+                service: this.concat,
+                provider: "-1",
+                available: false
             }
         ]
 
@@ -56,7 +67,6 @@ export class TextModule extends InfoSecModule {
 
         try {
 
-            let inputString : string = input[0] as string
             return input[0].toLowerCase()
 
         }
@@ -65,6 +75,10 @@ export class TextModule extends InfoSecModule {
             return error
         }
 
+    }
+
+    concat = (input: any[]) : string => {
+        return input[0] + input[1]
     }
 
 }
