@@ -120,23 +120,22 @@ bin_HexToString(str: string, base: number) {
 
   toHexadecimal = (input: any[]) : string => {
 
-    return this.stringToBin_Hex(input[0],16)
+    return parseInt(input[0]).toString(16)
 
   }
 
   fromHexadecimal = (input: any[]) : string => {
-    return this.bin_HexToString(input[0],16)
+    return parseInt(input[0],16).toString()
 
   }
 
   toBinary = (input: any[]) : string => {
-
-      return  this.stringToBin_Hex(input[0],2)
+      return parseInt(input[0]).toString(2)
   }
 
   fromBinary = (input: any[]) : string => {
 
-    return this.bin_HexToString(input[0],2)
+    return parseInt(input[0],2).toString()
 
   }
 
