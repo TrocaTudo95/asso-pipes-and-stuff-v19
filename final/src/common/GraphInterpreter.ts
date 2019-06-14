@@ -8,10 +8,12 @@ export abstract class AbstractElement {
     shape : any
     elementId : string
     children : AbstractElement[] = []
+    serviceName : string
 
-    constructor(shape : any) {
+    constructor(shape : any, serviceName : string) {
         this.shape = shape
         this.elementId = shape.id
+        this.serviceName = serviceName
     }
 
 }
@@ -22,7 +24,7 @@ export class ServiceElement extends AbstractElement {
     
 
     constructor(shape : any, service: Service) {
-        super(shape)
+        super(shape, service.serviceName)
         this.service = service
     }
 
@@ -48,7 +50,7 @@ export class ServiceElement extends AbstractElement {
 export class OutputElement extends AbstractElement {
 
     constructor(shape : any) {
-        super(shape)
+        super(shape, 'output')
     }
 
     interpret(context : Context) : Promise <any> {
@@ -62,7 +64,7 @@ export class InputElement extends AbstractElement {
     value : any
 
     constructor(shape : any) {
-        super(shape)
+        super(shape, 'input')
     }
 
     interpret(context : Context) {

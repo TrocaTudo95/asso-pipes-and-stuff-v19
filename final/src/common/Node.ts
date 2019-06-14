@@ -4,7 +4,7 @@ import { ServiceIndex, ServiceRequest, ServiceReply } from "./service-index";
 import * as joint from './joint-min'
 import * as _ from 'lodash';
 import * as backbone from 'backbone';
-import { AbstractElement, InputElement, OutputElement, ServiceElement, Context } from "./GraphInterpreter";
+import { InputElement, OutputElement, ServiceElement, Context, AbstractElement } from "./GraphInterpreter";
 
 export class InfoSecNode implements Observer {
     
@@ -110,45 +110,7 @@ export class InfoSecNode implements Observer {
 
         this.brokerInterface.publishMessage(`services/${this.nodeId}`,JSON.stringify(this.module.serviceIndex.getServicesForBroker()))
         this.addServicesOfNode(message,nodeId)
-        
-        /**
-         * testing only
-         */
-
-        if(this.module.name == 'ArithmeticLogicModule') {
-
-            // console.log('Arithmetic')
-         
-            // Promise.all([this.requestService(this.serviceLocator.getServicesForBroker()[0].serviceName, ['lower']), this.requestService(this.serviceLocator.getServicesForBroker()[0].serviceName, ['João Pedro'])])
-    
-            //    .then(result => {
-            //         console.log('Remote Service')
-            //         console.log(result)
-    
-            //    })
-            //    .catch(e => console.log(e))
-
-            // this.requestService(this.module.serviceIndex.getServices()[0].serviceName,[1,2,3,4])
-            //    .then(result => {
-            //         console.log('Local Service')
-            //         console.log(result)
-            //    })
-        
-        }
-
-        else if (this.module.name == 'ConversionModule') {
-
-            // Promise.all([this.requestService(this.serviceLocator.getServicesForBroker()[1].serviceName, [1,2,3]), this.requestService(this.serviceLocator.getServicesForBroker()[0].serviceName, [5])])
-    
-            //    .then(result => {
-    
-            //        console.log(result)
-    
-            //    })
-            //    .catch(e => console.log(e))
-
-        }
-         
+          
     }
 
     addServicesOfNode = (message: any, nodeId: string) => {
@@ -294,6 +256,8 @@ class UI {
             gridSize: 1,
         })
 
+        this.paper.on("cell:pointerdblclick",this.editInput)
+
         window.addEventListener('keyup', runListener)
 
     }
@@ -358,33 +322,39 @@ class UI {
         const service = this.node.findService(serviceName, nodeId)
 
         let shape : any = null
+
+        let abstractElement : AbstractElement = null
  
         if(serviceName == 'input') {
 
             shape = this.createGraphElement(event.offsetX - compensateOffsetX,event.offsetY - compensateOffsetY,serviceName,color,0,1)
-            const inputElement = new InputElement(shape)
-            this.node.elementList[shape.id] = inputElement //TODO remover hardcoded
-            this.insertInput(shape, inputElement)
+            abstractElement = new InputElement(shape)
+            this.node.elementList[shape.id] = abstractElement 
+            shape.addTo(this.graph)
+            this.insertInput(shape, abstractElement)
             
-
         }
 
         else if (serviceName == 'output') {
 
             shape = this.createGraphElement(event.offsetX - compensateOffsetX,event.offsetY - compensateOffsetY,serviceName,color,1,0)
-            this.node.elementList[shape.id] = new OutputElement(shape)
+            abstractElement = new OutputElement(shape)
+            this.node.elementList[shape.id] = abstractElement
             this.node.elementList.outputId = shape.id
+            shape.addTo(this.graph)
 
         }
 
         else {
 
             shape = this.createGraphElement(event.offsetX - compensateOffsetX,event.offsetY - compensateOffsetY,serviceName,color,service.numberOfParams,1)
-            this.node.elementList[shape.id] = new ServiceElement(shape,service)
+            abstractElement = new ServiceElement(shape,service)
+            this.node.elementList[shape.id] = abstractElement
+            shape.addTo(this.graph)
 
         }
 
-        shape.addTo(this.graph)
+        shape.attributes.abstractElement = abstractElement
 
     }
 
@@ -457,17 +427,23 @@ class UI {
       
     }
 
-    buildBlockOfService = () => {
+    insertInput = (shape : any, element : AbstractElement) => {
 
-
-
-    }
-
-    insertInput = (shape : any, inputElement : InputElement) => {
-
+        const inputElement = element as InputElement
         const input = prompt('Insert Input')
         shape.attr('.label/text', input)
         inputElement.value = input
+    }
+
+    editInput = (cell : any) => {
+
+        console.log(cell)
+        const abstractElement = cell.model.attributes.abstractElement as AbstractElement
+        if(abstractElement.serviceName == 'input') {
+            this.insertInput(cell.model, abstractElement)
+        }
+            
+
     }
 
 }
