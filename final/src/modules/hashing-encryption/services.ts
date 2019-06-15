@@ -1,5 +1,8 @@
 import { ServiceIndex } from "../../common/service-index";
 import { InfoSecModule } from "../../common/Module";
+import {Md5} from "md5-typescript";  /home/peteraya/Desktop/asso-pipes-and-stuff-v19/final/sha1.ts
+import * as sha1 from '../../../sha1';
+
 
 export class HashingModule extends InfoSecModule {
 
@@ -9,13 +12,23 @@ export class HashingModule extends InfoSecModule {
 
         let services = [
             {
-                serviceName: 'to_uppercase',
-                serviceDescription: 'Transform string to uppercase',
+                serviceName: 'md5',
+                serviceDescription: 'Hash string using MD5 algorithm',
                 params: ['Original String'],
                 paramsType: ['String'],
                 numberOfParams: 1,
                 returnType: 'string',
-                service: this.toUpperCase,
+                service: this.md5,
+                provider: "-1"
+            },
+            {
+                serviceName: 'sha1',
+                serviceDescription: 'Hash string using Sha1 algorithm',
+                params: ['Original String'],
+                paramsType: ['String'],
+                numberOfParams: 1,
+                returnType: 'string',
+                service: this.sha1,
                 provider: "-1"
             }
         ]
@@ -24,13 +37,26 @@ export class HashingModule extends InfoSecModule {
 
     }
 
-    toUpperCase = (input: any[]) : string => {
+    md5 = (input: any[]) : string => {
 
         try {
 
             let inputString : string = input[0] as string
-            return input[0].toUpperCase()
+            return Md5.init(input[0])
+        }
 
+        catch(error) {
+            return error
+        }
+
+    }
+
+    sha1 = (input: any[]) : string => {
+
+        try {
+
+            let inputString : string = input[0] as string
+            return sha1.sha1(input[0])
         }
 
         catch(error) {
