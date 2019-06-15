@@ -1,10 +1,10 @@
 import { InfoSecModule } from "./Module";
 import { BrokerInterface, Observer, fetchMQTT } from "../broker-interface/broker-interface";
-import { ServiceIndex, ServiceRequest, ServiceReply } from "./service-index";
+import { ServiceIndex, ServiceRequest, ServiceReply, Service } from "./service-index";
 import * as joint from './joint-min'
 import * as _ from 'lodash';
 import * as backbone from 'backbone';
-import { AbstractElement, InputElement, OutputElement, ServiceElement, Context } from "./GraphInterpreter";
+import { InputElement, OutputElement, ServiceElement, Context, AbstractElement } from "./GraphInterpreter";
 
 export class InfoSecNode implements Observer {
     
@@ -51,19 +51,15 @@ export class InfoSecNode implements Observer {
         try {
             
             await this.brokerInterface.connect()
-            await this.brokerInterface.publishMessage(`new/${this.nodeId}`, JSON.stringify(this.module.serviceIndex.getServicesForBroker()))
-            await this.brokerInterface.subscribeToTopics(['services/+','new/+', 'leave/+'])
+            await this.brokerInterface.publishMessage(`new/${this.nodeId}`,JSON.stringify({}))
+            await this.brokerInterface.subscribeToTopics(['new/+', 'services/+','leave/+', 'newService/+', 'removeService/+/+'])
             
-            let promises : Promise<string>[] = []
             this.module.serviceIndex.getServices().forEach(service => {
                 
-                promises.push(this.brokerInterface.subscribeToTopic(`service/${this.nodeId}/${service.serviceName}/+`))
                 this.ui.addService(service.serviceName, this.nodeId)
                 
             })
             
-            await Promise.all(promises)
-
         }
 
         catch(e) {
@@ -72,17 +68,61 @@ export class InfoSecNode implements Observer {
 
     }
 
+    announceService = async (serviceName : string) => {
+
+        try {
+            await this.brokerInterface.publishMessage(`newService/${this.nodeId}`, JSON.stringify(this.module.serviceIndex.findServiceForAnnouncement(serviceName)))
+            await this.brokerInterface.subscribeToTopic(`service/${this.nodeId}/${serviceName}/+`)
+            this.module.serviceIndex.makeServiceAvailable(serviceName)
+        }
+
+        catch(e) {
+            console.log(e)
+        }
+
+    }
+
+    cancelServiceToNetwork = async (serviceName : string) => {
+
+        try {
+            await this.brokerInterface.publishMessage(`removeService/${this.nodeId}/${this.module.serviceIndex.findServiceForAnnouncement(serviceName).serviceName}`, JSON.stringify({}))
+            await this.brokerInterface.unSubscribeToTopic(`service/${this.nodeId}/${serviceName}/+`)
+            this.module.serviceIndex.makeServiceUnavailable(serviceName)
+        }
+
+        catch(err) {
+            console.log(err)
+        }
+
+    }
+
     receiveMessage = (topic:string, message : any) : void => {
 
         const topicLevels : string[] = topic.split('/')
 
-        if(this.knownNodes.includes(topicLevels[1]) && topicLevels[0] != 'service' && topicLevels[0] != 'leave')
+        let ignore = false
+
+        /**
+         * Ignore services of already known nodes and own services (own id included in knownNodes)
+         */
+
+        if(this.knownNodes.includes(topicLevels[1]) && topicLevels[0] == 'services')
+            ignore = true
+
+        /**
+         * Ignore own requests for newService and removeService
+         */
+        
+        if(topicLevels[1] == this.nodeId && (topicLevels[0] == 'newService' || topicLevels[0] == 'removeService'))
+            ignore = true
+
+        if(ignore)
             return
         
         console.log(`processing msg received on topic ${topic}`)
 
         if(topicLevels[0] == 'new') {
-            this.onNewNode(message, topicLevels[1])
+            this.onNewNode()
         }
         else if(topicLevels[0] == 'services') {
             this.addServicesOfNode(message, topicLevels[1])
@@ -90,6 +130,14 @@ export class InfoSecNode implements Observer {
 
         else if(topicLevels[0] == 'leave') {
             this.removeServicesOfNode(topicLevels[1])
+        }
+
+        else if(topicLevels[0] == 'newService') {
+            this.addServiceOfNode(message, topicLevels[1])
+        }
+
+        else if(topicLevels[0] == 'removeService') {
+            this.removeServiceOfNode(topicLevels[2], topicLevels[1])
         }
 
         else if(topicLevels[0] == 'service') {
@@ -106,61 +154,26 @@ export class InfoSecNode implements Observer {
 
     }
 
-    onNewNode = (message : Object, nodeId: string) => {
+    onNewNode = () => {
 
         this.brokerInterface.publishMessage(`services/${this.nodeId}`,JSON.stringify(this.module.serviceIndex.getServicesForBroker()))
-        this.addServicesOfNode(message,nodeId)
-        
-        /**
-         * testing only
-         */
-
-        if(this.module.name == 'ArithmeticLogicModule') {
-
-            // console.log('Arithmetic')
-         
-            // Promise.all([this.requestService(this.serviceLocator.getServicesForBroker()[0].serviceName, ['lower']), this.requestService(this.serviceLocator.getServicesForBroker()[0].serviceName, ['João Pedro'])])
-    
-            //    .then(result => {
-            //         console.log('Remote Service')
-            //         console.log(result)
-    
-            //    })
-            //    .catch(e => console.log(e))
-
-            // this.requestService(this.module.serviceIndex.getServices()[0].serviceName,[1,2,3,4])
-            //    .then(result => {
-            //         console.log('Local Service')
-            //         console.log(result)
-            //    })
-        
-        }
-
-        else if (this.module.name == 'ConversionModule') {
-
-            // Promise.all([this.requestService(this.serviceLocator.getServicesForBroker()[1].serviceName, [1,2,3]), this.requestService(this.serviceLocator.getServicesForBroker()[0].serviceName, [5])])
-    
-            //    .then(result => {
-    
-            //        console.log(result)
-    
-            //    })
-            //    .catch(e => console.log(e))
-
-        }
-         
+          
     }
 
     addServicesOfNode = (message: any, nodeId: string) => {
 
         for(let i = 0; i < message.length; i++) {
-
-            this.serviceLocator.addService({...message[i], provider: nodeId })
-            this.ui.addService(message[i].serviceName, nodeId)
-
+            this.addServiceOfNode({...message[i], provider: nodeId }, nodeId)
         }
 
         this.knownNodes.push(nodeId)
+
+    }
+
+    addServiceOfNode = (service: Service, nodeId: string) => {
+
+        if(this.serviceLocator.addService({...service, provider: nodeId }))
+            this.ui.addService(service.serviceName, nodeId)
 
     }
 
@@ -172,10 +185,16 @@ export class InfoSecNode implements Observer {
 
     }
 
+    removeServiceOfNode = (serviceName: string, nodeId: string) => {
+
+        this.serviceLocator.removeService(serviceName, nodeId)
+        this.ui.removeService(serviceName, nodeId)
+
+    }
+
     requestService = async (serviceName: string, provider: string, params: any[]) : Promise<ServiceReply> => {
 
         return new Promise((res,rej) => {
-
             let service = this.findService(serviceName, provider)
 
             if(service.provider != "-1") {
@@ -253,8 +272,11 @@ export class InfoSecNode implements Observer {
 
             const finalResult = await outputElement.interpret(this.context)
 
-            outputElement.shape.attr('.label/text', finalResult.result)
+            outputElement.shape.attr('.label/text', `output \n ${finalResult.result}`)
 
+        }
+        else if(key == 8) {
+            this.ui.graph.clear()
         }
 
     }
@@ -290,9 +312,11 @@ class UI {
             el: document.getElementById('diagram'),
             model: this.graph,
             width: 1200,
-            height: 600,
+            height: 1000,
             gridSize: 1,
         })
+
+        this.paper.on("cell:pointerdblclick",this.editInput)
 
         window.addEventListener('keyup', runListener)
 
@@ -305,13 +329,26 @@ class UI {
         li.setAttribute('class',`nodeId${nodeId}`)
         li.innerHTML = `${serviceName}`
 
-        if( serviceName != 'input' && serviceName != 'output')
-            li.innerHTML += `@ #${nodeId}`
+        if(serviceName != 'input' && serviceName != 'output') {
+            li.innerHTML += `\n@ #${nodeId}`
 
+            if(nodeId == this.node.nodeId) {
+                let checkbox = document.createElement('input')
+                checkbox.setAttribute('type','checkbox')
+                checkbox.addEventListener('input',(event: Event) => this.handleServiceCheckBox(checkbox,serviceName))
+                li.appendChild(checkbox)
+            }
+        }
         li.style.backgroundColor = `#${nodeId}`
         li.setAttribute('draggable', 'true')
-        li.addEventListener('dragstart', this.dragElement)
-        this.services.appendChild(li)
+        li.addEventListener('dragstart', (event : Event) => this.dragElement(event,nodeId, serviceName))
+
+        
+        if(serviceName == 'input' || serviceName == 'output')
+            this.services.appendChild(li)    
+        
+        else 
+            this.services.insertBefore(li, this.services.children[2])
     }
 
     removeService = (serviceName: string, nodeId: string) => {
@@ -333,9 +370,9 @@ class UI {
         window.addEventListener('beforeunload', handler)
     }
 
-    dragElement = (event:any) => {
+    dragElement = (event:any, id: string, serviceName: string) => {
 
-        event.dataTransfer.setData("originElementId", event.target.id)
+        event.dataTransfer.setData("originElementId", `${serviceName}id${id}`)
         event.dataTransfer.setData("originOffsetX", event.offsetX)
         event.dataTransfer.setData("originOffsetY", event.offsetY)
 
@@ -349,41 +386,47 @@ class UI {
         const compensateOffsetY = event.dataTransfer.getData("originOffsetY")
 
         const comps = originElement.getAttribute('id').split('id')
-        
+
         const serviceName = comps[0]
         const nodeId = comps[1]
 
         let color = `#${nodeId}`
 
         const service = this.node.findService(serviceName, nodeId)
-
         let shape : any = null
+
+        let abstractElement : AbstractElement = null
  
         if(serviceName == 'input') {
 
             shape = this.createGraphElement(event.offsetX - compensateOffsetX,event.offsetY - compensateOffsetY,serviceName,color,0,1)
-            const inputElement = new InputElement(shape)
-            inputElement.value = "16"
-            this.node.elementList[shape.id] = inputElement //TODO remover hardcoded
+            abstractElement = new InputElement(shape)
+            this.node.elementList[shape.id] = abstractElement 
+            shape.addTo(this.graph)
+            this.insertInput(shape, abstractElement)
             
         }
 
         else if (serviceName == 'output') {
 
             shape = this.createGraphElement(event.offsetX - compensateOffsetX,event.offsetY - compensateOffsetY,serviceName,color,1,0)
-            this.node.elementList[shape.id] = new OutputElement(shape)
+            abstractElement = new OutputElement(shape)
+            this.node.elementList[shape.id] = abstractElement
             this.node.elementList.outputId = shape.id
+            shape.addTo(this.graph)
 
         }
 
         else {
 
             shape = this.createGraphElement(event.offsetX - compensateOffsetX,event.offsetY - compensateOffsetY,serviceName,color,service.numberOfParams,1)
-            this.node.elementList[shape.id] = new ServiceElement(shape,service)
+            abstractElement = new ServiceElement(shape,service)
+            this.node.elementList[shape.id] = abstractElement
+            shape.addTo(this.graph)
 
         }
 
-        shape.addTo(this.graph)
+        shape.attributes.abstractElement = abstractElement
 
     }
 
@@ -412,7 +455,7 @@ class UI {
             },
 
             size: {
-                width:140,
+                width:160,
                 height: 60
             },
 
@@ -427,14 +470,14 @@ class UI {
                     'in': {
                         attrs: {
                             '.port-body': {
-                                fill: '#16A085'
+                                fill: '#ce3b06'
                             }
                         }
                     },
                     'out': {
                         attrs: {
                             '.port-body': {
-                                fill: '#E74C3C'
+                                fill: '#1062e8'
                             }
                         }
                     }
@@ -456,9 +499,33 @@ class UI {
       
     }
 
-    buildBlockOfService = () => {
+    insertInput = (shape : any, element : AbstractElement) => {
+
+        const inputElement = element as InputElement
+        const input = prompt('Insert Input')
+        if(input != null && input != '') {
+            inputElement.value = input
+            shape.attr('.label/text', `input \n ${input}`)
+        }
+    }
+
+    editInput = (cell : any) => {
+
+        const abstractElement = cell.model.attributes.abstractElement as AbstractElement
+        if(abstractElement.serviceName == 'input') {
+            this.insertInput(cell.model, abstractElement)
+        }   
+    }
+
+    handleServiceCheckBox = (checkBox : HTMLInputElement, serviceName: string) => {
 
 
+        if(checkBox.checked) {
+            this.node.announceService(serviceName)
+        }
+        else {
+            this.node.cancelServiceToNetwork(serviceName)
+        }
 
     }
 

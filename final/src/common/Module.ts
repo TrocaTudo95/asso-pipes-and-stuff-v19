@@ -17,14 +17,6 @@ export abstract class InfoSecModule {
 
         let result = service.service(serviceRequest.params)
 
-        console.log('service request')
-        console.log(serviceRequest)
-
-        console.log('executing service')
-        console.log(service)
-
-        console.log(result)
-
         return result
 
     }
