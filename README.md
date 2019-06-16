@@ -39,7 +39,7 @@ Após isso, basta apenas construir o grafo com os Inputs e funcionalidades prete
 
 
 
-# Design Patterns mais usados:
+# Design Patterns usados:
 
 * **Publisher-Subscriber:** Pattern usado como a estrura base de todo o projeto, ao ter cada host como sendo simultaneamente como Publisher e Subscriber. O Publisher-Subscriber foi adaptado ao modelo Request/response nos casos em que era ncessário mapear um pedido com uma resposta.
 
