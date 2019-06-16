@@ -13,7 +13,7 @@ Live Coding of the Pipes and Filters Architecture (and possibly towards Event-Dr
 ## Abordagem
 
   Com este trabalho, pretendemos seguir o 4º cenário descrito em [https://github.com/hugoferreira/asso-pipes-and-stuff-v19] de forma a permitir ter vários Publishers
-e vários Subscribers. Um dos grandes objetivos a que nos propusemos foi a idealizar uma infrastrutura não local, mas em rede, na qual cada host funciona simultaneamente como Publisher e Subscriber, e na qual o Broker apenas direciona as mensagens para o local correto.
+e vários Subscribers. Um dos grandes objetivos a que nos propusemos foi a idealizar uma infrastrutura não local, mas em rede e descentralizada, na qual cada host funciona simultaneamente como Publisher e Subscriber, e na qual o Broker apenas direciona as mensagens para o local correto.
 
 
 A nível de funcionalidades, focamo-nos em 4 módulos principais: Conversion, Arithmetic/Logic, Text e Hashing/Encryption. Inicialmente, é apresentado uma lista com todos os módulos.
