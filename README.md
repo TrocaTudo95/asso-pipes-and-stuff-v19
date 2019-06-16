@@ -36,3 +36,17 @@ Desta forma, temos um sistema em que cada módulo, quando iniciado, avisa o Brok
 Após isso, basta apenas construir o grafo com os Inputs e funcionalidades pretendidas, acabar tudo o grafo num nó de Output, e depois primir o botão Enter, de forma a ativar um algoritmo que irá percorrer o grafo e dára a resposta no nó de Output. 
 
 ![alt text](https://imgur.com/TxaPF9e.gif)
+
+
+
+# Design Patterns mais usados:
+
+* **Publisher-Subscriber:** Pattern usado como a estrura base de todo o projeto, ao ter cada host como sendo simultaneamente como Publisher e Subscriber. O Publisher-Subscriber foi adaptado ao modelo Request/response nos casos em que era ncessário mapear um pedido com uma resposta.
+
+* **Pipes and Filters:** Pattern usado de forma a construir cada grafo como um pipe na qual cada nó (filter) contém as funcionalidades que estarão presentes nesta cadeia de elementos a serem processados.
+
+* **Interpreter e Composite:** Composite usado para compor os objetos numa estrutura do tipo árvore, bastante útil tendo em conta a configuração em árvore do nosso trabalho, bem como uso de Interpreter para percorrer a mesma. 
+
+* **Observer:** Usado para o Broker notificar os nós necessários da existência de novas mensagens.
+
+* **Plugin:** Pattern usado nas checkboxes, com o intuito de adicionar e remover de forma dinâmica apenas as funcionalidades requeridas de cada módulo aos restantes.
