@@ -28,11 +28,11 @@ Após isso, basta escolher um módulo pretendido, e este irá aparecer numa nova
 
 Cada host pode ter disponível funcionalidades de outros tipos de módulo que não o seu. Necessita apenas da existência de outra janela com o módulo diferente do atual, e necessita que nesta janela se dê "check" à funcionalidade que se pretende disponiblizar para os restantes hosts.
 
-[POR GIF]
+![alt text](https://imgur.com/q13V5Ah.gif)
 
 
 Desta forma, temos um sistema em que cada módulo, quando iniciado, avisa o Broker que está disponível, podendo de forma dinâmica e através do "check" e "uncheck" de cada funcionalidade, disponiblizar e retirar funcionalidade entre todos os hosts. 
 
 Após isso, basta apenas construir o grafo com os Inputs e funcionalidades pretendidas, acabar tudo o grafo num nó de Output, e depois primir o botão Enter, de forma a ativar um algoritmo que irá percorrer o grafo e dára a resposta no nó de Output. 
 
-[POR GIF]
+![alt text](https://imgur.com/TxaPF9e.gif)
